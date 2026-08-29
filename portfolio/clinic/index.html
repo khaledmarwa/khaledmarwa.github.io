@@ -1,0 +1,579 @@
+<meta charset="utf-8">
+<title>عيادة نبض لطب الأسنان</title>
+<meta name="description" content="نموذج موقع تعريفي عربي (RTL) لعيادة أسنan مع نظام حجز مواعيد — مشروع ضمن معرض الأعمال.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Almarai:wght@400;700&display=swap">
+
+<style>
+  /* ================= Tokens — light default, dark override ================= */
+  :root {
+    --bg:        #F5F8F7;
+    --surface:   #FFFFFF;
+    --surface-2: #EDF3F1;
+    --ink:       #17211F;
+    --ink-soft:  #4C5A57;
+    --ink-faint: #7C8B87;
+    --line:      #DEE8E5;
+    --brand:     #14655F;   /* deep eucalyptus */
+    --brand-ink: #0B403C;
+    --brand-tint:#E1EEEC;
+    --accent:    #E0904A;   /* warm amber — CTAs only */
+    --accent-ink:#7A4715;
+    --ok:        #1F7A4D;
+    --ok-tint:   #E2F1E8;
+    --danger:    #C0472F;
+    --shadow:    0 18px 40px -24px rgba(16,50,47,.35);
+    --radius:    16px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #0E1615;
+      --surface:   #16211F;
+      --surface-2: #1D2A28;
+      --ink:       #EAF1EF;
+      --ink-soft:  #B4C2BF;
+      --ink-faint: #7E8F8B;
+      --line:      #2A3A37;
+      --brand:     #57B3AA;
+      --brand-ink: #A9DBD5;
+      --brand-tint:#173430;
+      --accent:    #E8A25E;
+      --accent-ink:#3A220F;
+      --ok:        #46B37C;
+      --ok-tint:   #14332A;
+      --danger:    #E1755C;
+      --shadow:    0 18px 44px -24px rgba(0,0,0,.6);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#0E1615; --surface:#16211F; --surface-2:#1D2A28;
+    --ink:#EAF1EF; --ink-soft:#B4C2BF; --ink-faint:#7E8F8B; --line:#2A3A37;
+    --brand:#57B3AA; --brand-ink:#A9DBD5; --brand-tint:#173430;
+    --accent:#E8A25E; --accent-ink:#3A220F;
+    --ok:#46B37C; --ok-tint:#14332A; --danger:#E1755C;
+    --shadow:0 18px 44px -24px rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+
+  *,*::before,*::after { box-sizing: border-box; }
+
+  html { direction: rtl; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Almarai', 'Segoe UI', Tahoma, sans-serif;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,h2,h3,h4 { font-family: 'Cairo','Segoe UI',Tahoma,sans-serif; font-weight: 800; line-height: 1.25; margin: 0; text-wrap: balance; }
+
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+
+  .wrap { width: min(1120px, 100% - 2.5rem); margin-inline: auto; }
+
+  section { padding: clamp(3.5rem, 8vw, 6rem) 0; }
+  .sec-head { max-width: 46ch; margin-bottom: 2.5rem; }
+  .sec-head .kick {
+    display: inline-block;
+    font-family: 'Cairo',sans-serif; font-weight: 700; font-size: .82rem;
+    color: var(--brand); background: var(--brand-tint);
+    padding: .3rem .8rem; border-radius: 999px; margin-bottom: .9rem;
+  }
+  .sec-head h2 { font-size: clamp(1.6rem, 3.4vw, 2.35rem); }
+  .sec-head p { color: var(--ink-soft); margin: .7rem 0 0; }
+
+  /* ================= Buttons ================= */
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-family: 'Cairo',sans-serif; font-weight: 700; font-size: .95rem;
+    padding: .8rem 1.4rem; border-radius: 999px;
+    border: 1px solid transparent; cursor: pointer; text-decoration: none;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .btn-primary { background: var(--accent); color: #241206; box-shadow: 0 10px 24px -12px var(--accent); }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-ghost { background: transparent; color: var(--brand); border-color: var(--line); }
+  .btn-ghost:hover { background: var(--brand-tint); }
+  .btn-lg { padding: .95rem 1.7rem; font-size: 1rem; }
+
+  /* ================= Header ================= */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav { display: flex; align-items: center; gap: 1.2rem; padding: .85rem 0; }
+  .brand { display: flex; align-items: center; gap: .55rem; font-family: 'Cairo',sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--ink); text-decoration: none; }
+  .brand .mark {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    background: var(--brand); color: #fff;
+    display: grid; place-items: center; font-size: 1.05rem;
+  }
+  .nav-links { display: flex; gap: 1.4rem; margin-inline-start: auto; }
+  .nav-links a { text-decoration: none; color: var(--ink-soft); font-size: .95rem; font-weight: 700; font-family: 'Cairo',sans-serif; }
+  .nav-links a:hover { color: var(--brand); }
+  .nav-cta { display: flex; align-items: center; gap: .6rem; }
+  .nav-phone { font-family: 'Cairo',sans-serif; font-weight: 700; color: var(--brand); text-decoration: none; font-size: .95rem; white-space: nowrap; direction: ltr; }
+  .menu-btn { display: none; background: none; border: 1px solid var(--line); border-radius: 10px; width: 40px; height: 40px; color: var(--ink); cursor: pointer; font-size: 1.2rem; }
+
+  @media (max-width: 880px) {
+    .nav-links {
+      position: absolute; inset-inline: 0; top: 100%;
+      flex-direction: column; gap: 0;
+      background: var(--surface); border-bottom: 1px solid var(--line);
+      padding: .5rem 1.25rem 1rem;
+      display: none;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: .7rem 0; border-bottom: 1px solid var(--line); }
+    .menu-btn { display: block; margin-inline-start: auto; }
+    .nav-cta .btn { display: none; }
+    .nav-phone { display: none; }
+  }
+
+  /* ================= Hero ================= */
+  .hero { padding-top: clamp(2.5rem, 6vw, 4.5rem); }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  .hero h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); }
+  .hero p.sub { color: var(--ink-soft); font-size: clamp(1.02rem, 1.5vw, 1.18rem); margin: 1.1rem 0 1.8rem; max-width: 44ch; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; }
+  .hero-trust { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 2.2rem; }
+  .hero-trust div { }
+  .hero-trust b { font-family: 'Cairo',sans-serif; font-size: 1.5rem; color: var(--brand); display: block; }
+  .hero-trust span { font-size: .85rem; color: var(--ink-faint); }
+
+  .hero-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 24px; padding: 1.6rem; box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+  }
+  .hero-card::before {
+    content: ""; position: absolute; inset-block-start: -40%; inset-inline-end: -30%;
+    width: 70%; aspect-ratio: 1; border-radius: 50%;
+    background: var(--brand-tint);
+  }
+  .hero-card .row { position: relative; display: flex; align-items: center; gap: .9rem; padding: .9rem 0; border-bottom: 1px dashed var(--line); }
+  .hero-card .row:last-child { border-bottom: 0; }
+  .hero-card .ico { width: 42px; height: 42px; border-radius: 12px; background: var(--brand-tint); color: var(--brand); display: grid; place-items: center; flex: none; font-size: 1.15rem; }
+  .hero-card .row b { font-family: 'Cairo',sans-serif; display: block; font-size: .98rem; }
+  .hero-card .row span { font-size: .85rem; color: var(--ink-faint); }
+
+  /* ================= Cards / grids ================= */
+  .grid { display: grid; gap: 1.1rem; }
+  .g-3 { grid-template-columns: repeat(3, 1fr); }
+  .g-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) { .g-3, .g-4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .g-3, .g-4 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 1.4rem;
+  }
+  .card .ico {
+    width: 46px; height: 46px; border-radius: 13px; margin-bottom: .9rem;
+    background: var(--brand-tint); color: var(--brand);
+    display: grid; place-items: center; font-size: 1.3rem;
+  }
+  .card h3 { font-size: 1.12rem; margin-bottom: .35rem; }
+  .card p { color: var(--ink-soft); font-size: .93rem; margin: 0; }
+
+  /* steps */
+  .steps { counter-reset: s; display: grid; grid-template-columns: repeat(3,1fr); gap: 1.1rem; }
+  @media (max-width: 780px) { .steps { grid-template-columns: 1fr; } }
+  .step { position: relative; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem 1.4rem 1.4rem; }
+  .step::before {
+    counter-increment: s; content: counter(s);
+    font-family: 'Cairo',sans-serif; font-weight: 800; font-size: 1rem;
+    position: absolute; top: -16px; inset-inline-start: 1.4rem;
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--brand); color: #fff; display: grid; place-items: center;
+  }
+  .step h3 { font-size: 1.05rem; margin: .3rem 0 .3rem; }
+  .step p { color: var(--ink-soft); font-size: .9rem; margin: 0; }
+
+  /* FAQ */
+  .faq { display: grid; gap: .7rem; max-width: 760px; }
+  .faq details {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: .3rem .2rem;
+  }
+  .faq summary {
+    cursor: pointer; list-style: none; padding: .95rem 1.1rem;
+    font-family: 'Cairo',sans-serif; font-weight: 700; font-size: 1rem;
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; color: var(--brand); font-size: 1.3rem; flex: none; }
+  .faq details[open] summary::after { content: "\2212"; }
+  .faq details p { margin: 0; padding: 0 1.1rem 1rem; color: var(--ink-soft); font-size: .93rem; }
+
+  /* ================= Booking form ================= */
+  .booking { background: var(--brand); color: #fff; border-radius: 28px; padding: clamp(1.8rem, 4vw, 3rem); }
+  :root[data-theme="dark"] .booking { background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+  .booking .b-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+  @media (max-width: 820px) { .booking .b-grid { grid-template-columns: 1fr; } }
+  .booking h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); color: inherit; }
+  .booking .lede { opacity: .92; margin: .8rem 0 0; }
+  .booking .contact-list { margin-top: 1.6rem; display: grid; gap: .7rem; font-size: .95rem; }
+  .booking .contact-list span { display: flex; gap: .55rem; align-items: center; opacity: .95; }
+
+  form.book {
+    background: var(--surface); color: var(--ink);
+    border-radius: 20px; padding: 1.6rem; box-shadow: var(--shadow);
+    display: grid; gap: .9rem;
+  }
+  .field { display: grid; gap: .35rem; }
+  .field label { font-family: 'Cairo',sans-serif; font-weight: 700; font-size: .85rem; color: var(--ink-soft); }
+  .field input, .field select {
+    font-family: inherit; font-size: .95rem;
+    padding: .7rem .85rem; border-radius: 11px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    width: 100%;
+  }
+  .field input:focus, .field select:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
+  .field .err { color: var(--danger); font-size: .8rem; min-height: 1em; font-weight: 700; }
+  .field.invalid input, .field.invalid select { border-color: var(--danger); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+  @media (max-width: 480px) { .two { grid-template-columns: 1fr; } }
+
+  .form-note { font-size: .8rem; color: var(--ink-faint); }
+  .success {
+    display: none;
+    background: var(--ok-tint); border: 1px solid var(--ok); color: var(--ok);
+    border-radius: 14px; padding: 1.1rem 1.2rem; font-weight: 700;
+    font-family: 'Cairo',sans-serif;
+  }
+  .success.show { display: block; }
+  form.book.done .field, form.book.done .btn, form.book.done .form-note { display: none; }
+
+  /* ================= Footer ================= */
+  footer { background: var(--surface); border-top: 1px solid var(--line); padding: 3rem 0 2rem; }
+  .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 2rem; }
+  @media (max-width: 760px) { .foot-grid { grid-template-columns: 1fr; gap: 1.5rem; } }
+  footer h4 { font-family: 'Cairo',sans-serif; font-size: 1rem; margin-bottom: .8rem; }
+  footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+  footer a { color: var(--ink-soft); text-decoration: none; font-size: .92rem; }
+  footer a:hover { color: var(--brand); }
+  .foot-bottom { margin-top: 2rem; padding-top: 1.4rem; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .8rem; justify-content: space-between; color: var(--ink-faint); font-size: .82rem; }
+
+  .map { margin-top: .9rem; border: 1px solid var(--line); border-radius: 12px; height: 150px; background:
+      repeating-linear-gradient(45deg, var(--surface-2) 0 12px, transparent 12px 24px), var(--brand-tint);
+    display: grid; place-items: center; color: var(--brand); font-family: 'Cairo',sans-serif; font-weight: 700; font-size: .85rem; }
+
+  /* theme toggle */
+  .theme-btn {
+    background: transparent; border: 1px solid var(--line); border-radius: 10px;
+    width: 40px; height: 40px; cursor: pointer; color: var(--ink-soft); font-size: 1rem; flex: none;
+  }
+  .theme-btn:hover { color: var(--brand); border-color: var(--brand); }
+
+  /* reveal (JS-gated) */
+  .js [data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  .js [data-reveal].in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .js [data-reveal] { opacity: 1; transform: none; transition: none; } }
+
+  .demo-tag {
+    position: fixed; inset-block-end: 12px; inset-inline-start: 12px; z-index: 60;
+    background: var(--ink); color: var(--bg);
+    font-family: 'Cairo',sans-serif; font-weight: 700; font-size: .72rem;
+    padding: .35rem .7rem; border-radius: 999px; opacity: .82;
+  }
+</style>
+
+<script>document.documentElement.classList.add('js');</script>
+
+<header>
+  <div class="wrap nav">
+    <a href="#" class="brand"><span class="mark">🦷</span> عيادة نبض</a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#services">خدماتنا</a>
+      <a href="#why">لماذا نبض</a>
+      <a href="#how">خطوات الحجز</a>
+      <a href="#faq">أسئلة شائعة</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="nav-phone" href="tel:+966140000000" dir="ltr">+966 14 000 0000</a>
+      <a class="btn btn-primary" href="#book">احجز موعد</a>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="تبديل الوضع الليلي">◐</button>
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="القائمة" aria-expanded="false">☰</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <h1 data-reveal>ابتسامة صحية تبدأ بموعد واحد</h1>
+        <p class="sub" data-reveal>عيادة نبض لطب الأسنان في تبوك — رعاية دقيقة، أجهزة حديثة، وفريق يشرح لك كل خطوة قبل تنفيذها. احجز موعدك في أقل من دقيقة.</p>
+        <div class="hero-actions" data-reveal>
+          <a class="btn btn-primary btn-lg" href="#book">احجز موعدك الآن</a>
+          <a class="btn btn-ghost btn-lg" href="#services">تعرّف على خدماتنا</a>
+        </div>
+        <div class="hero-trust" data-reveal>
+          <div><b>+12</b><span>سنة خبرة تراكمية للفريق</span></div>
+          <div><b>7</b><span>تخصصات تحت سقف واحد</span></div>
+          <div><b>يوميًا</b><span>من ٩ صباحًا حتى ٩ مساءً</span></div>
+        </div>
+      </div>
+      <div class="hero-card" data-reveal>
+        <div class="row"><span class="ico">🗓️</span><div><b>حجز فوري أونلاين</b><span>اختر الخدمة والوقت المناسب لك</span></div></div>
+        <div class="row"><span class="ico">🦷</span><div><b>تقويم وزراعة وتجميل</b><span>خطة علاج واضحة ومكتوبة</span></div></div>
+        <div class="row"><span class="ico">💳</span><div><b>تقسيط وتأمين طبي</b><span>نتعامل مع أغلب شركات التأمين</span></div></div>
+        <div class="row"><span class="ico">🧼</span><div><b>تعقيم على أعلى المعايير</b><span>أدوات معقّمة ومغلّفة لكل مريض</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="kick">خدماتنا</span>
+        <h2>كل ما تحتاجه أسنانك في مكان واحد</h2>
+        <p>من الفحص الدوري إلى أعقد حالات الزراعة والتجميل، بفريق متخصص لكل مجال.</p>
+      </div>
+      <div class="grid g-3">
+        <div class="card" data-reveal><div class="ico">🔍</div><h3>الفحص والوقاية</h3><p>فحص شامل، تنظيف وتلميع، وتطبيق الفلورايد للوقاية من التسوّس.</p></div>
+        <div class="card" data-reveal><div class="ico">✨</div><h3>تجميل الأسنان</h3><p>تبييض احترافي، عدسات (فينير)، وابتسامة هوليوود بتصميم رقمي مسبق.</p></div>
+        <div class="card" data-reveal><div class="ico">🔩</div><h3>زراعة الأسنان</h3><p>زراعة فورية ومتأخرة بأنظمة عالمية، مع ضمان مكتوب على الغرسة.</p></div>
+        <div class="card" data-reveal><div class="ico">📐</div><h3>تقويم الأسنان</h3><p>تقويم معدني وشفاف (Clear Aligners) ومتابعة دورية حتى النتيجة النهائية.</p></div>
+        <div class="card" data-reveal><div class="ico">🦷</div><h3>حشوات وعلاج جذور</h3><p>حشوات تجميلية بلون السن وعلاج عصب دقيق باستخدام المجهر.</p></div>
+        <div class="card" data-reveal><div class="ico">🧒</div><h3>أسنان الأطفال</h3><p>جلسة ودّية تُعوّد الطفل على العيادة، مع حشوات وقائية ومتابعة النمو.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="why" style="background:var(--surface-2)">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="kick">لماذا نبض</span>
+        <h2>عيادة تعاملك كأنك ضيف، لا رقم في الدور</h2>
+      </div>
+      <div class="grid g-4">
+        <div class="card" data-reveal><div class="ico">💬</div><h3>شرح قبل التنفيذ</h3><p>تعرف تكلفة وخطوات علاجك مكتوبة قبل أي إجراء.</p></div>
+        <div class="card" data-reveal><div class="ico">⏱️</div><h3>مواعيد تحترم وقتك</h3><p>نظام حجز يقلّل الانتظار، وتذكير برسالة قبل الموعد.</p></div>
+        <div class="card" data-reveal><div class="ico">🩺</div><h3>أجهزة حديثة</h3><p>أشعة رقمية بجرعة منخفضة وكاميرا داخل الفم لترى ما نراه.</p></div>
+        <div class="card" data-reveal><div class="ico">🤝</div><h3>متابعة بعد الجلسة</h3><p>نتصل بك للاطمئنان بعد الإجراءات الكبرى.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="kick">خطوات الحجز</span>
+        <h2>ثلاث خطوات ويصير عندك موعد</h2>
+      </div>
+      <div class="steps">
+        <div class="step" data-reveal><h3>عبّئ النموذج</h3><p>اسمك، رقمك، الخدمة، والوقت المفضّل — أقل من دقيقة.</p></div>
+        <div class="step" data-reveal><h3>نتواصل لتأكيد الموعد</h3><p>يتصل بك فريق الاستقبال خلال ساعات العمل لتثبيت الوقت.</p></div>
+        <div class="step" data-reveal><h3>تحضر وتُخدَم في وقتك</h3><p>تصلك رسالة تذكير، وتُستقبَل في الموعد المحدّد دون انتظار طويل.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="book">
+    <div class="wrap">
+      <div class="booking" data-reveal>
+        <div class="b-grid">
+          <div>
+            <h2>احجز موعدك في عيادة نبض</h2>
+            <p class="lede">عبّئ بياناتك وسيتواصل معك فريقنا لتأكيد الموعد في أقرب وقت مناسب لك.</p>
+            <div class="contact-list">
+              <span>📞 <a href="tel:+966140000000" style="color:inherit;text-decoration:none" dir="ltr">+966 14 000 0000</a></span>
+              <span>💬 واتساب: <span dir="ltr">+966 55 000 0000</span></span>
+              <span>📍 طريق الأمير سلطان، تبوك</span>
+              <span>🕘 السبت – الخميس: ٩ ص – ٩ م</span>
+            </div>
+          </div>
+
+          <form class="book" id="bookForm" novalidate>
+            <div class="field">
+              <label for="name">الاسم الكامل</label>
+              <input type="text" id="name" name="name" autocomplete="name" placeholder="مثال: محمد الأحمد">
+              <span class="err" data-err="name"></span>
+            </div>
+            <div class="two">
+              <div class="field">
+                <label for="phone">رقم الجوال</label>
+                <input type="tel" id="phone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="05XXXXXXXX" dir="ltr">
+                <span class="err" data-err="phone"></span>
+              </div>
+              <div class="field">
+                <label for="service">الخدمة</label>
+                <select id="service" name="service">
+                  <option value="">اختر الخدمة</option>
+                  <option>فحص وتنظيف</option>
+                  <option>تجميل وتبييض</option>
+                  <option>زراعة أسنان</option>
+                  <option>تقويم أسنان</option>
+                  <option>حشوة أو علاج جذور</option>
+                  <option>أسنان أطفال</option>
+                  <option>استشارة عامة</option>
+                </select>
+                <span class="err" data-err="service"></span>
+              </div>
+            </div>
+            <div class="two">
+              <div class="field">
+                <label for="date">التاريخ المفضّل</label>
+                <input type="date" id="date" name="date">
+                <span class="err" data-err="date"></span>
+              </div>
+              <div class="field">
+                <label for="slot">الفترة</label>
+                <select id="slot" name="slot">
+                  <option value="">اختر الفترة</option>
+                  <option>صباحًا (٩ – ١٢)</option>
+                  <option>ظهرًا (١٢ – ٤)</option>
+                  <option>مساءً (٤ – ٩)</option>
+                </select>
+                <span class="err" data-err="slot"></span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-lg" type="submit" style="width:100%;justify-content:center">أرسل طلب الحجز</button>
+            <p class="form-note">بالضغط على «أرسل» فأنت توافق على تواصل العيادة معك لتأكيد الموعد.</p>
+            <div class="success" id="bookSuccess"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" style="background:var(--surface-2)">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="kick">أسئلة شائعة</span>
+        <h2>أسئلة يسألها مرضانا كثيرًا</h2>
+      </div>
+      <div class="faq">
+        <details data-reveal><summary>هل الحجز عبر الموقع يعني تأكيد الموعد مباشرة؟</summary><p>لا، الحجز طلب مبدئي. يتواصل معك فريق الاستقبال خلال ساعات العمل لتثبيت الوقت النهائي حسب توفّر الطبيب.</p></details>
+        <details data-reveal><summary>هل تتعاملون مع التأمين الطبي؟</summary><p>نعم، نتعامل مع أغلب شركات التأمين. أحضر بطاقة التأمين في أول زيارة ليتم التحقق من التغطية.</p></details>
+        <details data-reveal><summary>كم تكلفة الاستشارة الأولى؟</summary><p>الاستشارة والفحص المبدئي بسعر رمزي يُحتسب من قيمة العلاج إذا قررت المتابعة معنا.</p></details>
+        <details data-reveal><summary>هل يوجد تقسيط للعلاجات الكبيرة مثل الزراعة والتقويم؟</summary><p>نعم، تتوفر خطط تقسيط عبر جهات التمويل المعتمدة، ويُشرح لك الجدول كاملًا قبل البدء.</p></details>
+        <details data-reveal><summary>هل تستقبلون الحالات الطارئة؟</summary><p>نخصص وقتًا يوميًا للحالات الطارئة مثل الألم الحاد أو كسر السن. اتصل بنا مباشرة ووضّح حالتك.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a href="#" class="brand" style="margin-bottom:.8rem"><span class="mark">🦷</span> عيادة نبض</a>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin:0;max-width:34ch">عيادة أسنان متكاملة في تبوك، تجمع التخصصات تحت سقف واحد برعاية تركّز على راحة المريض.</p>
+        <div class="map">خريطة الموقع — طريق الأمير سلطان</div>
+      </div>
+      <div>
+        <h4>روابط سريعة</h4>
+        <ul>
+          <li><a href="#services">خدماتنا</a></li>
+          <li><a href="#why">لماذا نبض</a></li>
+          <li><a href="#how">خطوات الحجز</a></li>
+          <li><a href="#faq">أسئلة شائعة</a></li>
+          <li><a href="#book">حجز موعد</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>تواصل معنا</h4>
+        <ul>
+          <li><a href="tel:+966140000000" dir="ltr">+966 14 000 0000</a></li>
+          <li><a href="#" dir="ltr">واتساب: +966 55 000 0000</a></li>
+          <li><a href="#">البريد: info@nabd-clinic.sa</a></li>
+          <li>طريق الأمير سلطان، تبوك</li>
+          <li>السبت – الخميس: ٩ ص – ٩ م</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="yr">2026</span> عيادة نبض لطب الأسنان — جميع الحقوق محفوظة.</span>
+      <span>نموذج ضمن معرض أعمال — تصميم وتطوير</span>
+    </div>
+  </div>
+</footer>
+
+<div class="demo-tag">نموذج تجريبي · معرض أعمال</div>
+
+<script>
+  (function () {
+    document.documentElement.lang = 'ar';
+    document.documentElement.dir = 'rtl';
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    /* theme */
+    var root = document.documentElement, KEY = 'nabd-theme';
+    try { var s = localStorage.getItem(KEY); if (s) root.setAttribute('data-theme', s); } catch (e) {}
+    document.getElementById('themeBtn').addEventListener('click', function () {
+      var cur = root.getAttribute('data-theme') ||
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem(KEY, next); } catch (e) {}
+    });
+
+    /* mobile nav */
+    var menuBtn = document.getElementById('menuBtn'), links = document.getElementById('navLinks');
+    menuBtn.addEventListener('click', function () {
+      var open = links.classList.toggle('open');
+      menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    links.addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') { links.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); }
+    });
+
+    /* reveal on scroll */
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold: .12, rootMargin: '0px 0px -40px' });
+    document.querySelectorAll('[data-reveal]').forEach(function (el) { io.observe(el); });
+
+    /* min date = today */
+    var dateEl = document.getElementById('date');
+    dateEl.min = new Date().toISOString().split('T')[0];
+
+    /* booking form validation */
+    var form = document.getElementById('bookForm');
+    var okBox = document.getElementById('bookSuccess');
+
+    function setErr(name, msg) {
+      var field = form.querySelector('[name="' + name + '"]').closest('.field');
+      field.classList.toggle('invalid', !!msg);
+      form.querySelector('[data-err="' + name + '"]').textContent = msg || '';
+    }
+    function validPhone(v) { return /^0\d{9}$/.test(v.replace(/[\s-]/g, '')); }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var d = Object.fromEntries(new FormData(form).entries());
+      var bad = false;
+      if (!d.name || d.name.trim().length < 3) { setErr('name', 'من فضلك اكتب اسمك الكامل'); bad = true; } else setErr('name');
+      if (!validPhone(d.phone || '')) { setErr('phone', 'رقم جوال سعودي غير صحيح (٠٥ ثم ٨ أرقام)'); bad = true; } else setErr('phone');
+      if (!d.service) { setErr('service', 'اختر الخدمة'); bad = true; } else setErr('service');
+      if (!d.date) { setErr('date', 'اختر التاريخ'); bad = true; } else setErr('date');
+      if (!d.slot) { setErr('slot', 'اختر الفترة'); bad = true; } else setErr('slot');
+      if (bad) { form.querySelector('.invalid input, .invalid select').focus(); return; }
+
+      try {
+        var all = JSON.parse(localStorage.getItem('nabd-bookings') || '[]');
+        all.push(Object.assign(d, { at: new Date().toISOString() }));
+        localStorage.setItem('nabd-bookings', JSON.stringify(all));
+      } catch (e2) {}
+
+      form.classList.add('done');
+      okBox.classList.add('show');
+      okBox.textContent = 'تم استلام طلبك يا ' + d.name.trim().split(' ')[0] + '! سيتواصل معك فريق العيادة على الرقم ' + d.phone + ' لتأكيد موعد ' + d.service + '.';
+      okBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  })();
+</script>
