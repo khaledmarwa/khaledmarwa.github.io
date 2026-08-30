@@ -2,89 +2,739 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<title>معرض الأعمال — تطوير ويب</title>
-<meta name="description" content="نماذج تطوير ويب: واجهات عربية RTL متجاوبة، لوحات تحكم، وأدوات.">
+<title>مولّد الفواتير الضريبية</title>
+<meta name="description" content="نموذج أداة إنشاء فاتورة ضريبية مبسّطة (PDF) مع حساب ضريبة القيمة المضافة ورمز QR متوافق مع هيئة الزكاة والضريبة.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
-    --bg:#FBFAF8; --surface:#FFFFFF; --ink:#181820; --soft:#5A5A66; --faint:#8C8C98;
-    --line:#E7E5E0; --accent:#5B4BD6; --accent-soft:#EDEBFA;
+    --bg:#F4F5F3; --surface:#FFFFFF; --surface-2:#EEF0EC;
+    --ink:#1A201C; --ink-soft:#4C554F; --ink-faint:#636B65;
+    --line:#E0E3DE; --line-strong:#CDD2CB;
+    --accent:#1E6E43; --accent-ink:#175733; --accent-soft:#E4F0E9; --on-accent:#FFFFFF;
+    --danger:#BE3B36; --danger-soft:#F9E6E5;
+    --paper:#FFFFFF; --paper-ink:#161915; --paper-line:#D9DCD6; --paper-soft:#6A736C;
+    --shadow:0 1px 3px rgba(20,30,24,.06), 0 12px 30px -16px rgba(20,30,24,.2);
+    --radius:12px;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#101014; --surface:#17171D; --ink:#ECECF0; --soft:#AAAAB6; --faint:#75757F;
-      --line:#26262E; --accent:#9A8CFF; --accent-soft:#20203A; color-scheme: dark; }
+    :root:not([data-theme="light"]) {
+      --bg:#0E120F; --surface:#161B17; --surface-2:#1D231F;
+      --ink:#E7ECE7; --ink-soft:#AAB3AC; --ink-faint:#8B948C;
+      --line:#262E28; --line-strong:#333D35;
+      --accent:#3E9C68; --accent-ink:#7FC79E; --accent-soft:#17301F; --on-accent:#06130C;
+      --danger:#E06B64; --danger-soft:#2C1917;
+      --shadow:0 1px 3px rgba(0,0,0,.3), 0 14px 34px -18px rgba(0,0,0,.65);
+      color-scheme: dark;
+    }
   }
-  * { box-sizing: border-box; }
+  :root[data-theme="dark"] {
+    --bg:#0E120F; --surface:#161B17; --surface-2:#1D231F;
+    --ink:#E7ECE7; --ink-soft:#AAB3AC; --ink-faint:#8B948C;
+    --line:#262E28; --line-strong:#333D35;
+    --accent:#3E9C68; --accent-ink:#7FC79E; --accent-soft:#17301F; --on-accent:#06130C;
+    --danger:#E06B64; --danger-soft:#2C1917;
+    --shadow:0 1px 3px rgba(0,0,0,.3), 0 14px 34px -18px rgba(0,0,0,.65);
+    color-scheme: dark;
+  }
+
+  * , *::before, *::after { box-sizing:border-box; }
+  html { direction:rtl; }
   body {
     margin:0; background:var(--bg); color:var(--ink);
-    font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif; line-height:1.7;
+    font-family:'Tajawal','Segoe UI',Tahoma,sans-serif; line-height:1.6;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap { width:min(760px,100% - 2.5rem); margin-inline:auto; padding:clamp(3rem,10vw,6rem) 0; }
-  header { margin-bottom:3.5rem; }
-  .eyebrow { color:var(--accent); font-weight:600; font-size:.85rem; margin:0 0 .6rem; }
-  h1 { font-size:clamp(1.8rem,5vw,2.6rem); font-weight:700; line-height:1.25; margin:0 0 .8rem; text-wrap:balance; }
-  header p { color:var(--soft); margin:0; max-width:52ch; }
-  header .who { margin-top:1.4rem; font-size:.9rem; color:var(--faint); }
-  header .who b { color:var(--ink); font-weight:600; }
+  h1,h2,h3 { margin:0; font-weight:700; line-height:1.3; }
+  .mono { font-family:'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; }
 
-  .list { display:grid; gap:1rem; }
-  a.item {
-    display:block; text-decoration:none; color:inherit;
-    background:var(--surface); border:1px solid var(--line); border-radius:14px;
-    padding:1.4rem 1.5rem; transition:border-color .15s ease, transform .15s ease;
-  }
-  a.item:hover { border-color:var(--accent); transform:translateY(-2px); }
-  a.item[aria-disabled="true"] { opacity:.55; pointer-events:none; }
-  .item .top { display:flex; align-items:center; gap:.7rem; margin-bottom:.35rem; }
-  .item h2 { font-size:1.15rem; font-weight:700; margin:0; }
-  .item .tag {
-    font-size:.72rem; font-weight:600; color:var(--accent);
-    background:var(--accent-soft); padding:.15rem .55rem; border-radius:999px;
-  }
-  .item p { color:var(--soft); font-size:.93rem; margin:0; }
-  .item .stack { margin-top:.7rem; font-size:.78rem; color:var(--faint); }
+  .wrap { max-width:1200px; margin-inline:auto; padding:clamp(1rem,3vw,2rem); }
 
-  footer { margin-top:3.5rem; padding-top:1.5rem; border-top:1px solid var(--line); color:var(--faint); font-size:.82rem; }
-  a.plain { color:var(--accent); text-decoration:none; }
+  .head { display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; margin-bottom:1.4rem; }
+  .head .logo { width:42px; height:42px; border-radius:11px; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; font-size:1.3rem; flex:none; }
+  .head h1 { font-size:1.2rem; }
+  .head .sub { font-size:.8rem; color:var(--ink-faint); }
+  .head .right { margin-inline-start:auto; display:flex; gap:.5rem; flex-wrap:wrap; }
+
+  .btn {
+    font-family:inherit; font-size:.88rem; font-weight:500; cursor:pointer;
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.6rem 1rem; border-radius:9px;
+    border:1px solid var(--line-strong); background:var(--surface); color:var(--ink);
+  }
+  .btn:hover { border-color:var(--accent); }
+  .btn-primary { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+  .btn-sm { padding:.35rem .6rem; font-size:.8rem; }
+  .btn-danger { color:var(--danger); border-color:transparent; background:transparent; }
+
+  .layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); gap:1.5rem; align-items:start; }
+  @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
+
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
+  .card > h2 { font-size:.95rem; padding:.9rem 1.1rem; border-bottom:1px solid var(--line); }
+  .card .body { padding:1.1rem; display:grid; gap:1rem; }
+
+  fieldset { border:none; margin:0; padding:0; display:grid; gap:.7rem; }
+  legend { font-weight:700; font-size:.85rem; color:var(--accent-ink); padding:0; margin-bottom:.2rem; }
+  :root[data-theme="dark"] legend { color:var(--accent-ink); }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+  @media (max-width:460px){ .grid2{ grid-template-columns:1fr; } }
+  .fld { display:grid; gap:.25rem; }
+  .fld label { font-size:.78rem; color:var(--ink-soft); font-weight:500; }
+  input {
+    font-family:inherit; font-size:.9rem; color:var(--ink);
+    background:var(--surface-2); border:1px solid var(--line-strong);
+    border-radius:8px; padding:.5rem .65rem; width:100%;
+  }
+  input:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  input.mono { letter-spacing:.02em; }
+  .fld .err { font-size:.72rem; color:var(--danger); min-height:.85em; }
+  .fld.bad input { border-color:var(--danger); }
+
+  /* items editor */
+  .items { display:grid; gap:.5rem; }
+  .item-row { display:grid; grid-template-columns:1fr 4.5rem 6rem auto; gap:.5rem; align-items:end; }
+  .item-row .k { font-size:.7rem; color:var(--ink-faint); }
+  @media (max-width:560px){
+    .item-row { grid-template-columns:1fr 1fr; }
+    .item-row .desc { grid-column:1/-1; }
+  }
+  .items-head { font-size:.72rem; color:var(--ink-faint); display:grid; grid-template-columns:1fr 4.5rem 6rem auto; gap:.5rem; padding-inline:.1rem; }
+  @media (max-width:560px){ .items-head{ display:none; } }
+
+  /* ===== Invoice preview (paper) — always light ===== */
+  .paper-scroll { overflow-x:auto; }
+  .paper {
+    background:var(--paper); color:var(--paper-ink);
+    width:100%; max-width:520px; margin-inline:auto;
+    border:1px solid var(--paper-line); border-radius:10px;
+    padding:1.6rem; font-size:.86rem;
+  }
+  .paper .doc-head { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; border-bottom:2px solid var(--accent); padding-bottom:.9rem; }
+  .paper .doc-head .title-ar { font-weight:700; font-size:1.05rem; }
+  .paper .doc-head .title-en { font-size:.75rem; color:var(--paper-soft); }
+  .paper .seller { text-align:left; font-size:.8rem; line-height:1.5; }
+  .paper .meta { display:grid; grid-template-columns:1fr 1fr; gap:.4rem 1rem; margin:.9rem 0; font-size:.8rem; }
+  .paper .meta .lbl { color:var(--paper-soft); }
+  .paper table { width:100%; border-collapse:collapse; margin-top:.4rem; font-size:.8rem; }
+  .paper th, .paper td { padding:.45rem .5rem; text-align:right; border-bottom:1px solid var(--paper-line); }
+  .paper th { color:var(--paper-soft); font-weight:500; border-bottom:1px solid var(--paper-ink); }
+  .paper td.n, .paper th.n { text-align:left; font-family:'IBM Plex Mono',monospace; }
+  .paper .totals { margin-top:.8rem; margin-inline-start:auto; width:min(260px,100%); display:grid; gap:.3rem; font-size:.83rem; }
+  .paper .totals .r { display:flex; justify-content:space-between; }
+  .paper .totals .r.grand { border-top:2px solid var(--paper-ink); padding-top:.35rem; font-weight:700; font-size:.95rem; }
+  .paper .totals .r .v { font-family:'IBM Plex Mono',monospace; }
+  .paper .qr-area { margin-top:1.1rem; display:flex; gap:1rem; align-items:center; border-top:1px dashed var(--paper-line); padding-top:1rem; }
+  .paper .qr-area svg { width:118px; height:118px; flex:none; background:#fff; }
+  .paper .qr-area .note { font-size:.72rem; color:var(--paper-soft); }
+  .paper .foot { margin-top:1rem; font-size:.72rem; color:var(--paper-soft); text-align:center; }
+
+  .b64 { margin-top:.7rem; font-size:.72rem; color:var(--ink-soft); word-break:break-all; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:.5rem .6rem; }
+  .b64 b { color:var(--ink); }
+
+  .demo-tag { position:fixed; inset-block-end:12px; inset-inline-start:12px; z-index:40; background:var(--surface); border:1px solid var(--line); color:var(--ink-faint); font-size:.72rem; padding:.3rem .6rem; border-radius:99px; box-shadow:var(--shadow); }
+  .toast { position:fixed; inset-block-end:1.2rem; inset-inline:0; margin-inline:auto; width:max-content; max-width:90vw; background:var(--ink); color:var(--bg); font-size:.85rem; font-weight:500; padding:.7rem 1.1rem; border-radius:10px; opacity:0; transform:translateY(8px); transition:.2s; pointer-events:none; z-index:50; }
+  .toast.show { opacity:1; transform:none; }
+
+  /* ===== Print ===== */
+  @media print {
+    body { background:#fff; }
+    .wrap > .head, .layout > .card:first-child, .demo-tag, .b64, .toast { display:none !important; }
+    .layout { display:block; }
+    .card { border:none; box-shadow:none; }
+    .card > h2 { display:none; }
+    .paper { max-width:none; border:none; padding:0; font-size:11pt; }
+    .paper .qr-area svg { width:130px; height:130px; }
+    @page { margin:16mm; }
+  }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <p class="eyebrow">معرض أعمال</p>
-      <h1>تطوير واجهات وأنظمة ويب عربية</h1>
-      <p>نماذج مبنية من الصفر: واجهات عربية (RTL) متجاوبة، لوحات تحكم إدارية، وأدوات — بكود نظيف وبدون مكتبات خارجية.</p>
-      <p class="who">إعداد <b>【اسمك / اسم علامتك】</b> · للتواصل: <span dir="ltr">【 you@email.com 】</span></p>
-    </header>
+<div class="wrap">
 
-    <main class="list">
-      <a class="item" href="./clinic/">
-        <div class="top"><h2>عيادة نبض لطب الأسنان</h2><span class="tag">مباشر</span></div>
-        <p>موقع تعريفي متكامل لعيادة أسنان مع نظام حجز مواعيد بتحقق فوري ووضع ليلي.</p>
-        <div class="stack">HTML · CSS · JavaScript · تصميم متجاوب</div>
-      </a>
-
-      <a class="item" href="./inventory/">
-        <div class="top"><h2>لوحة المخزون والمبيعات</h2><span class="tag">مباشر</span></div>
-        <p>لوحة تحكم إدارية: جداول بحث وفرز، إضافة وتعديل وبيع، تنبيهات نفاد المخزون، ورسوم بيانية — مع حفظ محلي.</p>
-        <div class="stack">JavaScript · إدارة الحالة · تصور البيانات · SVG</div>
-      </a>
-
-      <a class="item" href="./invoices/" aria-disabled="true">
-        <div class="top"><h2>مولّد الفواتير الضريبية</h2><span class="tag">قريبًا</span></div>
-        <p>أداة إنشاء فاتورة ضريبية مبسّطة (PDF) مع حساب ضريبة القيمة المضافة ورمز QR متوافق مع هيئة الزكاة والضريبة.</p>
-        <div class="stack">JavaScript · توليد PDF · ترميز QR</div>
-      </a>
-    </main>
-
-    <footer>
-      جميع النماذج صفحات مستقلة تعمل بلا خادم — قابلة للتخصيص الكامل لأي عميل.
-    </footer>
+  <div class="head">
+    <div class="logo">﷼</div>
+    <div>
+      <h1>مولّد الفواتير الضريبية</h1>
+      <div class="sub">فاتورة ضريبية مبسّطة + رمز QR (هيئة الزكاة والضريبة) — نموذج معرض أعمال</div>
+    </div>
+    <div class="right">
+      <button class="btn" id="btnTheme" type="button" aria-label="تبديل السمة">◐</button>
+      <button class="btn" id="btnSample" type="button">تعبئة مثال</button>
+      <button class="btn btn-primary" id="btnPrint" type="button">🖨️ طباعة / حفظ PDF</button>
+    </div>
   </div>
+
+  <div class="layout">
+    <!-- ===== FORM ===== -->
+    <div class="card">
+      <h2>بيانات الفاتورة</h2>
+      <div class="body">
+        <fieldset>
+          <legend>البائع</legend>
+          <div class="fld"><label for="sName">اسم المنشأة</label><input id="sName" autocomplete="organization"><div class="err" data-err="sName"></div></div>
+          <div class="grid2">
+            <div class="fld"><label for="sVat">الرقم الضريبي (١٥ رقمًا)</label><input id="sVat" class="mono" inputmode="numeric" maxlength="15"><div class="err" data-err="sVat"></div></div>
+            <div class="fld"><label for="sAddr">العنوان (اختياري)</label><input id="sAddr"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>المشتري (اختياري في الفاتورة المبسّطة)</legend>
+          <div class="grid2">
+            <div class="fld"><label for="bName">اسم المشتري</label><input id="bName"></div>
+            <div class="fld"><label for="bVat">الرقم الضريبي للمشتري</label><input id="bVat" class="mono" inputmode="numeric" maxlength="15"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>الفاتورة</legend>
+          <div class="grid2">
+            <div class="fld"><label for="invNo">رقم الفاتورة</label><input id="invNo" class="mono"></div>
+            <div class="fld"><label for="invDate">التاريخ والوقت</label><input id="invDate" type="datetime-local"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>البنود</legend>
+          <div class="items-head"><span>الوصف</span><span>الكمية</span><span>سعر الوحدة</span><span></span></div>
+          <div class="items" id="items"></div>
+          <button class="btn btn-sm" id="btnAddItem" type="button" style="justify-self:start">＋ إضافة بند</button>
+        </fieldset>
+      </div>
+    </div>
+
+    <!-- ===== PREVIEW ===== -->
+    <div class="card">
+      <h2>معاينة الفاتورة</h2>
+      <div class="body">
+        <div class="paper-scroll"><div class="paper" id="paper"></div></div>
+        <div class="b64"><b>سلسلة QR (Base64 / TLV):</b> <span id="b64" class="mono"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="demo-tag">نموذج تجريبي</div>
+
+<script>
+/* ============================================================================
+   محرّك QR — تطبيق قياسي مضمّن (نمط البايت / Byte mode)
+   ISO/IEC 18004 — مستوى تصحيح الأخطاء M، الإصدارات 1–40
+   مبني خصيصًا لهذه الأداة، بدون أي مكتبة خارجية.
+   ============================================================================ */
+var QR = (function () {
+  "use strict";
+
+  // عدد وحدات البيانات الخام لكل إصدار (قبل تصحيح الأخطاء)
+  function rawDataModules(ver) {
+    var r = (16 * ver + 128) * ver + 64;
+    if (ver >= 2) {
+      var na = Math.floor(ver / 7) + 2;
+      r -= (25 * na - 10) * na - 55;
+      if (ver >= 7) r -= 36;
+    }
+    return r;
+  }
+  // جداول ISO/IEC 18004 (المستوى M): عدد رموز تصحيح الأخطاء لكل كتلة، وعدد الكتل
+  var ECC_M  = [0,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28];
+  var BLK_M  = [0, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49];
+
+  // ---- حساب في حقل جالوا GF(256) بالمقسوم الأولي 0x11D ----
+  var EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+  (function () {
+    var x = 1;
+    for (var i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11D; }
+    for (i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  })();
+  function gmul(a, b) { return (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]]; }
+
+  // متعددة الحدود المولّدة لتصحيح الأخطاء بدرجة deg
+  function rsGenerator(deg) {
+    var poly = [1];
+    for (var d = 0; d < deg; d++) {
+      var next = new Array(poly.length + 1).fill(0);
+      for (var i = 0; i < poly.length; i++) {
+        next[i] ^= gmul(poly[i], EXP[d]);
+        next[i + 1] ^= poly[i];
+      }
+      poly = next;
+    }
+    return poly;
+  }
+  // باقي قسمة كثيرة الحدود على المولّدة — يعطي رموز تصحيح الأخطاء
+  function ecc(dataCodewords, ecLen) {
+    var gen = rsGenerator(ecLen);            // طول gen = ecLen+1، gen[0] = 1 (الحد الأعلى)
+    var res = new Array(ecLen).fill(0);
+    for (var i = 0; i < dataCodewords.length; i++) {
+      var f = dataCodewords[i] ^ res[0];
+      res.shift(); res.push(0);
+      for (var j = 0; j < ecLen; j++) res[j] ^= gmul(gen[j + 1], f);
+    }
+    return res;
+  }
+
+  // ---- اختيار أصغر إصدار يتّسع للبيانات ----
+  function chooseVersion(byteLen) {
+    for (var v = 1; v <= 40; v++) {
+      var totalCw = Math.floor(rawDataModules(v) / 8);
+      var ecPer = ECC_M[v], blocks = BLK_M[v];
+      var dataCw = totalCw - ecPer * blocks;
+      var cci = v < 10 ? 8 : 16;                 // بتات عدّاد الأحرف في نمط البايت
+      var capacity = Math.floor((dataCw * 8 - 4 - cci) / 8);
+      if (byteLen <= capacity) return v;
+    }
+    throw new Error('البيانات كبيرة على QR');
+  }
+
+  // ---- ترميز البيانات إلى رموز (codewords) ----
+  function makeDataCodewords(bytes, ver) {
+    var totalCw = Math.floor(rawDataModules(ver) / 8);
+    var dataCw = totalCw - ECC_M[ver] * BLK_M[ver];
+    var bits = [];
+    function push(val, len) { for (var i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); }
+    push(0b0100, 4);                              // مؤشر نمط البايت
+    push(bytes.length, ver < 10 ? 8 : 16);        // عدّاد الطول
+    for (var i = 0; i < bytes.length; i++) push(bytes[i], 8);
+    push(0, Math.min(4, dataCw * 8 - bits.length));    // منهي
+    while (bits.length % 8) bits.push(0);              // حشو حتى بايت كامل
+    var cw = [];
+    for (i = 0; i < bits.length; i += 8) { var b = 0; for (var k = 0; k < 8; k++) b = (b << 1) | bits[i + k]; cw.push(b); }
+    var pad = [0xEC, 0x11], p = 0;
+    while (cw.length < dataCw) cw.push(pad[p++ % 2]);
+    return cw;
+  }
+
+  // ---- تصحيح الأخطاء + تشذير الكتل ----
+  function addEcc(dataCw, ver) {
+    var blocks = BLK_M[ver], ecLen = ECC_M[ver], totalCw = Math.floor(rawDataModules(ver) / 8);
+    var numShort = blocks - (totalCw % blocks);
+    var shortLen = Math.floor(totalCw / blocks) - ecLen;
+    var dBlocks = [], eBlocks = [], off = 0;
+    for (var b = 0; b < blocks; b++) {
+      var len = shortLen + (b < numShort ? 0 : 1);
+      var d = dataCw.slice(off, off + len); off += len;
+      dBlocks.push(d); eBlocks.push(ecc(d, ecLen));
+    }
+    var result = [];
+    for (var i = 0; i < shortLen + 1; i++) for (b = 0; b < blocks; b++) if (i < dBlocks[b].length) result.push(dBlocks[b][i]);
+    for (i = 0; i < ecLen; i++) for (b = 0; b < blocks; b++) result.push(eBlocks[b][i]);
+    return result;
+  }
+
+  // ---- بناء المصفوفة ----
+  function alignPositions(ver) {
+    if (ver === 1) return [];
+    var na = Math.floor(ver / 7) + 2, size = ver * 4 + 17;
+    var step = ver === 32 ? 26 : Math.ceil((ver * 4 + 4) / (na * 2 - 2)) * 2;
+    var pos = [6];
+    for (var p = size - 7; pos.length < na; p -= step) pos.splice(1, 0, p);
+    return pos;
+  }
+
+  function build(codewords, ver) {
+    var size = ver * 4 + 17;
+    var m = [], fn = [];                          // m = وحدات، fn = خريطة النمط الوظيفي
+    for (var i = 0; i < size; i++) { m.push(new Array(size).fill(0)); fn.push(new Array(size).fill(0)); }
+    function set(r, c, v) { m[r][c] = v ? 1 : 0; fn[r][c] = 1; }
+
+    function finder(r, c) {
+      for (var dr = -1; dr <= 7; dr++) for (var dc = -1; dc <= 7; dc++) {
+        var rr = r + dr, cc = c + dc;
+        if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
+        var d = Math.max(Math.abs(dr - 3), Math.abs(dc - 3));
+        set(rr, cc, d !== 2 && d !== 4);
+      }
+    }
+    finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+
+    for (i = 8; i < size - 8; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }  // التوقيت
+
+    var ap = alignPositions(ver);
+    for (var a = 0; a < ap.length; a++) for (var bb = 0; bb < ap.length; bb++) {
+      var pr = ap[a], pc = ap[bb];
+      if ((pr === 6 && pc === 6) || (pr === 6 && pc === size - 7) || (pr === size - 7 && pc === 6)) continue;
+      for (var adr = -2; adr <= 2; adr++) for (var adc = -2; adc <= 2; adc++)
+        set(pr + adr, pc + adc, Math.max(Math.abs(adr), Math.abs(adc)) !== 1);
+    }
+
+    set(size - 8, 8, 1);                          // الوحدة الداكنة الثابتة
+
+    // حجز أماكن معلومات الصيغة
+    for (i = 0; i < 9; i++) { if (i !== 6) { fn[8][i] = 1; fn[i][8] = 1; } }
+    for (i = 0; i < 8; i++) { fn[8][size - 1 - i] = 1; fn[size - 1 - i][8] = 1; }
+    // معلومات الإصدار (7+)
+    if (ver >= 7) for (i = 0; i < 6; i++) for (var j = 0; j < 3; j++) { fn[i][size - 11 + j] = 1; fn[size - 11 + j][i] = 1; }
+
+    // وضع البيانات بنمط التعرّج
+    var bitIdx = 0;
+    var bytes = codewords;
+    function bitAt(n) { return (bytes[n >> 3] >> (7 - (n & 7))) & 1; }
+    var totalBits = bytes.length * 8;
+    for (var col = size - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+      for (var row = 0; row < size; row++) {
+        for (var cN = 0; cN < 2; cN++) {
+          var cc2 = col - cN;
+          var upward = ((col + 1) & 2) === 0;
+          var rr2 = upward ? size - 1 - row : row;
+          if (fn[rr2][cc2]) continue;
+          m[rr2][cc2] = bitIdx < totalBits ? bitAt(bitIdx) : 0;
+          bitIdx++;
+        }
+      }
+    }
+    return { m: m, fn: fn, size: size };
+  }
+
+  function applyMask(m, fn, size, mask) {
+    var out = [];
+    for (var r = 0; r < size; r++) {
+      out.push(m[r].slice());
+      for (var c = 0; c < size; c++) {
+        if (fn[r][c]) continue;
+        var inv;
+        switch (mask) {
+          case 0: inv = (r + c) % 2 === 0; break;
+          case 1: inv = r % 2 === 0; break;
+          case 2: inv = c % 3 === 0; break;
+          case 3: inv = (r + c) % 3 === 0; break;
+          case 4: inv = (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0; break;
+          case 5: inv = ((r * c) % 2) + ((r * c) % 3) === 0; break;
+          case 6: inv = (((r * c) % 2) + ((r * c) % 3)) % 2 === 0; break;
+          case 7: inv = (((r + c) % 2) + ((r * c) % 3)) % 2 === 0; break;
+        }
+        if (inv) out[r][c] ^= 1;
+      }
+    }
+    return out;
+  }
+
+  function drawFormat(m, size, mask) {
+    var data = (0 << 3) | mask;                   // المستوى M = 00 (بتتان)، ثم رقم القناع (٣ بتات)
+    var rem = data;
+    for (var i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >> 9) & 1 ? 0x537 : 0);   // BCH(15,5)
+    var bits = ((data << 10) | rem) ^ 0x5412;     // قناع النمط الثابت
+    // النسخة الأولى: حول زاوية الباحث العلوية اليسرى
+    for (i = 0; i <= 5; i++) m[8][i] = (bits >> i) & 1;
+    m[8][7] = (bits >> 6) & 1; m[8][8] = (bits >> 7) & 1; m[7][8] = (bits >> 8) & 1;
+    for (i = 9; i < 15; i++) m[14 - i][8] = (bits >> i) & 1;
+    // النسخة الثانية (نسخة احتياطية): عمود 8 لأسفل + صف 8 لليمين
+    for (i = 0; i < 8; i++) m[size - 1 - i][8] = (bits >> i) & 1;
+    for (i = 8; i < 15; i++) m[8][size - 15 + i] = (bits >> i) & 1;
+    m[size - 8][8] = 1;                            // الوحدة الداكنة الثابتة
+  }
+
+  function drawVersion(m, size, ver) {
+    if (ver < 7) return;
+    var rem = ver;
+    for (var i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >> 11) & 1 ? 0x1F25 : 0);
+    var bits = (ver << 12) | rem;
+    for (i = 0; i < 18; i++) {
+      var b = (bits >> i) & 1, a = Math.floor(i / 3), c = i % 3;
+      m[size - 11 + c][a] = b; m[a][size - 11 + c] = b;
+    }
+  }
+
+  function penalty(m, size) {
+    var score = 0, r, c, i;
+    for (r = 0; r < size; r++) for (c = 0; c < size; c++) {
+      // قواعد مبسّطة: تكرار أفقي/رأسي
+      if (c < size - 1 && m[r][c] === m[r][c + 1]) { /* run handled below */ }
+    }
+    function runs(get) {
+      for (var a = 0; a < size; a++) {
+        var run = 1;
+        for (var b = 1; b < size; b++) {
+          if (get(a, b) === get(a, b - 1)) { run++; if (run === 5) score += 3; else if (run > 5) score++; }
+          else run = 1;
+        }
+      }
+    }
+    runs(function (a, b) { return m[a][b]; });
+    runs(function (a, b) { return m[b][a]; });
+    var dark = 0;
+    for (r = 0; r < size; r++) for (c = 0; c < size; c++) if (m[r][c]) dark++;
+    var pct = dark * 100 / (size * size);
+    score += Math.floor(Math.abs(pct - 50) / 5) * 10;
+    for (r = 0; r < size - 1; r++) for (c = 0; c < size - 1; c++)
+      if (m[r][c] === m[r][c + 1] && m[r][c] === m[r + 1][c] && m[r][c] === m[r + 1][c + 1]) score += 3;
+    return score;
+  }
+
+  function encode(text) {
+    var bytes = Array.from(new TextEncoder().encode(text));
+    var ver = chooseVersion(bytes.length);
+    var dataCw = makeDataCodewords(bytes, ver);
+    var full = addEcc(dataCw, ver);
+    var base = build(full, ver);
+    var best = null, bestScore = Infinity, bestMask = 0;
+    for (var mask = 0; mask < 8; mask++) {
+      var masked = applyMask(base.m, base.fn, base.size, mask);
+      drawFormat(masked, base.size, mask);
+      drawVersion(masked, base.size, ver);
+      var s = penalty(masked, base.size);
+      if (s < bestScore) { bestScore = s; best = masked; bestMask = mask; }
+    }
+    return { modules: best, size: base.size, version: ver };
+  }
+
+  function toSvg(text, px) {
+    var q = encode(text), n = q.size, quiet = 4, total = n + quiet * 2;
+    var d = '';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
+      if (q.modules[r][c]) d += 'M' + (c + quiet) + ',' + (r + quiet) + 'h1v1h-1z';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + total + ' ' + total + '" ' +
+      'width="' + (px || total) + '" height="' + (px || total) + '" shape-rendering="crispEdges" role="img" aria-label="رمز الاستجابة السريعة للفاتورة">' +
+      '<rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+  }
+
+  return { encode: encode, toSvg: toSvg };
+})();
+
+/* ============================================================================
+   ترميز TLV المتوافق مع هيئة الزكاة والضريبة (المرحلة الأولى)
+   خمسة حقول: اسم البائع، الرقم الضريبي، الطابع الزمني، الإجمالي، إجمالي الضريبة
+   ============================================================================ */
+function zatcaBase64(fields) {
+  var enc = new TextEncoder();
+  var order = ['sellerName', 'vatNumber', 'timestamp', 'total', 'vatTotal'];
+  var out = [];
+  order.forEach(function (key, i) {
+    var v = enc.encode(String(fields[key]));
+    out.push(i + 1, v.length);
+    for (var j = 0; j < v.length; j++) out.push(v[j]);
+  });
+  var bin = '';
+  for (var k = 0; k < out.length; k++) bin += String.fromCharCode(out[k]);
+  return btoa(bin);
+}
+
+/* ============================================================================
+   التطبيق
+   ============================================================================ */
+(function () {
+  "use strict";
+  var root = document.documentElement; root.lang = 'ar'; root.dir = 'rtl';
+  var $ = function (s) { return document.querySelector(s); };
+  var VAT_RATE = 0.15;
+
+  var state = {
+    seller: { name: '', vat: '', addr: '' },
+    buyer: { name: '', vat: '' },
+    invNo: '',
+    date: '',
+    items: []
+  };
+
+  /* ---- تخزين محلي: بيانات البائع + عدّاد الفواتير ---- */
+  function loadSeller() {
+    try {
+      var s = JSON.parse(localStorage.getItem('inv3-seller') || 'null');
+      if (s) state.seller = s;
+    } catch (e) {}
+  }
+  function saveSeller() { try { localStorage.setItem('inv3-seller', JSON.stringify(state.seller)); } catch (e) {} }
+  function nextInvNo() {
+    var n = 1;
+    try { n = (parseInt(localStorage.getItem('inv3-counter') || '0', 10) || 0) + 1; } catch (e) {}
+    return 'INV-' + String(n).padStart(5, '0');
+  }
+  function bumpCounter() {
+    try {
+      var m = /(\d+)$/.exec(state.invNo);
+      if (m) localStorage.setItem('inv3-counter', String(parseInt(m[1], 10)));
+    } catch (e) {}
+  }
+
+  /* ---- حسابات ---- */
+  function lineNet(it) { return (+it.qty || 0) * (+it.price || 0); }
+  function subtotal() { return state.items.reduce(function (s, it) { return s + lineNet(it); }, 0); }
+  function vatAmount() { return subtotal() * VAT_RATE; }
+  function grandTotal() { return subtotal() + vatAmount(); }
+  function money(n) { return (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  /* ---- عناصر البنود ---- */
+  function renderItems() {
+    var box = $('#items');
+    box.innerHTML = state.items.map(function (it, i) {
+      return '<div class="item-row">' +
+        '<div class="fld desc"><input data-i="' + i + '" data-k="desc" placeholder="وصف الصنف" value="' + attr(it.desc) + '"></div>' +
+        '<div class="fld"><input class="mono" data-i="' + i + '" data-k="qty" inputmode="decimal" value="' + attr(it.qty) + '"></div>' +
+        '<div class="fld"><input class="mono" data-i="' + i + '" data-k="price" inputmode="decimal" value="' + attr(it.price) + '"></div>' +
+        '<button class="btn btn-sm btn-danger" data-del="' + i + '" type="button" title="حذف">✕</button>' +
+        '</div>';
+    }).join('');
+  }
+  function attr(v) { return String(v == null ? '' : v).replace(/"/g, '&quot;'); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]; }); }
+
+  /* ---- المعاينة + QR ---- */
+  function isoTimestamp() {
+    var d = state.date ? new Date(state.date) : new Date();
+    return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  }
+
+  // إعادة رسم المعاينة (الفاتورة + سلسلة QR) فقط — لا تلمس صفوف الإدخال
+  function renderPreview() {
+    var sub = subtotal(), vat = vatAmount(), tot = grandTotal();
+    var b64 = zatcaBase64({
+      sellerName: state.seller.name || '—',
+      vatNumber: state.seller.vat || '—',
+      timestamp: isoTimestamp(),
+      total: money(tot),
+      vatTotal: money(vat)
+    });
+
+    var rows = state.items.map(function (it) {
+      return '<tr><td>' + esc(it.desc || '—') + '</td>' +
+        '<td class="n">' + esc(it.qty || 0) + '</td>' +
+        '<td class="n">' + money(+it.price || 0) + '</td>' +
+        '<td class="n">' + money(lineNet(it)) + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--paper-soft)">لا توجد بنود</td></tr>';
+
+    var buyerBlock = state.buyer.name
+      ? '<div><span class="lbl">المشتري: </span>' + esc(state.buyer.name) + (state.buyer.vat ? ' — ' + esc(state.buyer.vat) : '') + '</div>' : '';
+
+    var qrSvg = QR.toSvg(b64, 118);
+
+    $('#paper').innerHTML =
+      '<div class="doc-head">' +
+        '<div><div class="title-ar">فاتورة ضريبية مبسّطة</div><div class="title-en">Simplified Tax Invoice</div></div>' +
+        '<div class="seller"><strong>' + esc(state.seller.name || 'اسم المنشأة') + '</strong>' +
+          '<br>الرقم الضريبي: <span class="mono">' + esc(state.seller.vat || '—') + '</span>' +
+          (state.seller.addr ? '<br>' + esc(state.seller.addr) : '') + '</div>' +
+      '</div>' +
+      '<div class="meta">' +
+        '<div><span class="lbl">رقم الفاتورة: </span><span class="mono">' + esc(state.invNo || '—') + '</span></div>' +
+        '<div><span class="lbl">التاريخ: </span>' + esc(fmtDate()) + '</div>' +
+        buyerBlock +
+      '</div>' +
+      '<table><thead><tr><th>الوصف</th><th class="n">الكمية</th><th class="n">سعر الوحدة</th><th class="n">الإجمالي</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
+      '<div class="totals">' +
+        '<div class="r"><span>المجموع (غير شامل الضريبة)</span><span class="v">' + money(sub) + ' ﷼</span></div>' +
+        '<div class="r"><span>ضريبة القيمة المضافة (١٥٪)</span><span class="v">' + money(vat) + ' ﷼</span></div>' +
+        '<div class="r grand"><span>الإجمالي المستحق</span><span class="v">' + money(tot) + ' ﷼</span></div>' +
+      '</div>' +
+      '<div class="qr-area">' + qrSvg +
+        '<div class="note">رمز الاستجابة السريعة يحتوي بيانات الفاتورة وفق متطلبات المرحلة الأولى للفوترة الإلكترونية (هيئة الزكاة والضريبة والجمارك).</div>' +
+      '</div>' +
+      '<div class="foot">شكرًا لتعاملكم معنا — هذا نموذج توضيحي ضمن معرض أعمال</div>';
+
+    $('#b64').textContent = b64;
+  }
+
+  // إعادة رسم كل شيء (تُستخدم عند إضافة/حذف بند أو تعبئة مثال)
+  function render() { renderItems(); renderPreview(); }
+
+  function fmtDate() {
+    var d = state.date ? new Date(state.date) : new Date();
+    return d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* ---- ربط النموذج ---- */
+  function bindInput(id, path) {
+    var el = $('#' + id);
+    el.addEventListener('input', function () {
+      var v = el.value;
+      var seg = path.split('.');
+      if (seg.length === 2) state[seg[0]][seg[1]] = v; else state[seg[0]] = v;
+      if (seg[0] === 'seller') saveSeller();
+      validate();
+      renderPreview();
+    });
+  }
+
+  function validate() {
+    var ok = true;
+    function mark(id, bad, msg) {
+      var f = $('#' + id).closest('.fld');
+      f.classList.toggle('bad', bad);
+      var e = f.querySelector('.err'); if (e) e.textContent = bad ? msg : '';
+      if (bad) ok = false;
+    }
+    mark('sName', !state.seller.name.trim(), 'اسم المنشأة مطلوب');
+    mark('sVat', !/^\d{15}$/.test(state.seller.vat), 'الرقم الضريبي ١٥ رقمًا');
+    return ok;
+  }
+
+  $('#btnAddItem').addEventListener('click', function () {
+    state.items.push({ desc: '', qty: 1, price: 0 });
+    render();
+  });
+  $('#items').addEventListener('input', function (e) {
+    var t = e.target; if (!t.dataset.k) return;
+    var it = state.items[+t.dataset.i];
+    if (!it) return;
+    if (t.dataset.k === 'desc') { it.desc = t.value; }
+    else {
+      var clean = t.value.replace(/[^\d.]/g, '');
+      if (clean !== t.value) t.value = clean;   // نظّف الإدخال في مكانه دون إعادة بناء الصف
+      it[t.dataset.k] = clean;
+    }
+    renderPreview();   // نحدّث الفاتورة فقط — صفوف الإدخال تبقى كما هي فلا يقفز المؤشر
+  });
+  $('#items').addEventListener('click', function (e) {
+    var d = e.target.closest('[data-del]');
+    if (d) { state.items.splice(+d.dataset.del, 1); render(); }
+  });
+
+  $('#btnPrint').addEventListener('click', function () {
+    if (!validate()) { toast('أكمل بيانات البائع أولًا'); return; }
+    bumpCounter();
+    window.print();
+  });
+
+  $('#btnSample').addEventListener('click', function () {
+    state.seller = { name: 'مؤسسة الأفق للتجارة', vat: '310175397400003', addr: 'طريق الملك فهد، تبوك' };
+    state.buyer = { name: 'محمد العتيبي', vat: '' };
+    state.items = [
+      { desc: 'جهاز راوتر Wi-Fi 6', qty: 2, price: 320 },
+      { desc: 'كابل شبكة Cat6 (٥ م)', qty: 5, price: 18 },
+      { desc: 'تركيب وإعداد', qty: 1, price: 150 }
+    ];
+    fillForm();
+    render();
+    toast('تم تعبئة مثال');
+  });
+
+  $('#btnTheme').addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('inv3-theme', next); } catch (e) {}
+  });
+
+  var toastT;
+  function toast(m) { var el = $('#toast'); el.textContent = m; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('show'); }, 2200); }
+
+  function fillForm() {
+    $('#sName').value = state.seller.name; $('#sVat').value = state.seller.vat; $('#sAddr').value = state.seller.addr;
+    $('#bName').value = state.buyer.name; $('#bVat').value = state.buyer.vat;
+    $('#invNo').value = state.invNo; $('#invDate').value = state.date;
+  }
+
+  /* ---- init ---- */
+  try { var th = localStorage.getItem('inv3-theme'); if (th) root.setAttribute('data-theme', th); } catch (e) {}
+  loadSeller();
+  state.invNo = nextInvNo();
+  var now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  state.date = now.toISOString().slice(0, 16);
+  if (!state.items.length) state.items = [{ desc: '', qty: 1, price: 0 }];
+
+  ['sName:seller.name', 'sVat:seller.vat', 'sAddr:seller.addr', 'bName:buyer.name', 'bVat:buyer.vat', 'invNo:invNo', 'invDate:date']
+    .forEach(function (pair) { var p = pair.split(':'); bindInput(p[0], p[1]); });
+
+  fillForm();
+  validate();
+  render();
+})();
+</script>
 </body>
 </html>

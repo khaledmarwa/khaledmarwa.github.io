@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>معرض الأعمال — تطوير ويب</title>
+<meta name="description" content="نماذج تطوير ويب: واجهات عربية RTL متجاوبة، لوحات تحكم، وأدوات.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg:#FBFAF8; --surface:#FFFFFF; --ink:#181820; --soft:#5A5A66; --faint:#8C8C98;
+    --line:#E7E5E0; --accent:#5B4BD6; --accent-soft:#EDEBFA;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#101014; --surface:#17171D; --ink:#ECECF0; --soft:#AAAAB6; --faint:#75757F;
+      --line:#26262E; --accent:#9A8CFF; --accent-soft:#20203A; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif; line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { width:min(760px,100% - 2.5rem); margin-inline:auto; padding:clamp(3rem,10vw,6rem) 0; }
+  header { margin-bottom:3.5rem; }
+  .eyebrow { color:var(--accent); font-weight:600; font-size:.85rem; margin:0 0 .6rem; }
+  h1 { font-size:clamp(1.8rem,5vw,2.6rem); font-weight:700; line-height:1.25; margin:0 0 .8rem; text-wrap:balance; }
+  header p { color:var(--soft); margin:0; max-width:52ch; }
+  header .who { margin-top:1.4rem; font-size:.9rem; color:var(--faint); }
+  header .who b { color:var(--ink); font-weight:600; }
+
+  .list { display:grid; gap:1rem; }
+  a.item {
+    display:block; text-decoration:none; color:inherit;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:1.4rem 1.5rem; transition:border-color .15s ease, transform .15s ease;
+  }
+  a.item:hover { border-color:var(--accent); transform:translateY(-2px); }
+  a.item[aria-disabled="true"] { opacity:.55; pointer-events:none; }
+  .item .top { display:flex; align-items:center; gap:.7rem; margin-bottom:.35rem; }
+  .item h2 { font-size:1.15rem; font-weight:700; margin:0; }
+  .item .tag {
+    font-size:.72rem; font-weight:600; color:var(--accent);
+    background:var(--accent-soft); padding:.15rem .55rem; border-radius:999px;
+  }
+  .item p { color:var(--soft); font-size:.93rem; margin:0; }
+  .item .stack { margin-top:.7rem; font-size:.78rem; color:var(--faint); }
+
+  footer { margin-top:3.5rem; padding-top:1.5rem; border-top:1px solid var(--line); color:var(--faint); font-size:.82rem; }
+  a.plain { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">معرض أعمال</p>
+      <h1>تطوير واجهات وأنظمة ويب عربية</h1>
+      <p>نماذج مبنية من الصفر: واجهات عربية (RTL) متجاوبة، لوحات تحكم إدارية، وأدوات — بكود نظيف وبدون مكتبات خارجية.</p>
+      <p class="who">إعداد <b>【اسمك / اسم علامتك】</b> · للتواصل: <span dir="ltr">【 you@email.com 】</span></p>
+    </header>
+
+    <main class="list">
+      <a class="item" href="./clinic/">
+        <div class="top"><h2>عيادة نبض لطب الأسنان</h2><span class="tag">مباشر</span></div>
+        <p>موقع تعريفي متكامل لعيادة أسنان مع نظام حجز مواعيد بتحقق فوري ووضع ليلي.</p>
+        <div class="stack">HTML · CSS · JavaScript · تصميم متجاوب</div>
+      </a>
+
+      <a class="item" href="./inventory/">
+        <div class="top"><h2>لوحة المخزون والمبيعات</h2><span class="tag">مباشر</span></div>
+        <p>لوحة تحكم إدارية: جداول بحث وفرز، إضافة وتعديل وبيع، تنبيهات نفاد المخزون، ورسوم بيانية — مع حفظ محلي.</p>
+        <div class="stack">JavaScript · إدارة الحالة · تصور البيانات · SVG</div>
+      </a>
+
+      <a class="item" href="./invoices/">
+        <div class="top"><h2>مولّد الفواتير الضريبية</h2><span class="tag">مباشر</span></div>
+        <p>أداة إنشاء فاتورة ضريبية مبسّطة (PDF) مع حساب ضريبة القيمة المضافة ورمز QR متوافق مع المرحلة الأولى للفوترة الإلكترونية.</p>
+        <div class="stack">JavaScript · محرّك QR مبني يدويًا · ترميز TLV · طباعة PDF</div>
+      </a>
+    </main>
+
+    <footer>
+      جميع النماذج صفحات مستقلة تعمل بلا خادم — قابلة للتخصيص الكامل لأي عميل.
+    </footer>
+  </div>
+</body>
+</html>
