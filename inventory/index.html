@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>لوحة المخزون والمبيعات</title>
+<meta name="description" content="نموذج لوحة تحكم إدارية: مخزون، مبيعات، تنبيهات نفاد، ورسوم بيانية — بدون مكتبات خارجية.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600&display=swap">
+<style>
+  /* ============ Design tokens ============ */
+  :root {
+    --bg:#F2F3F6; --surface:#FFFFFF; --surface-2:#F7F8FB; --surface-3:#EEF0F4;
+    --ink:#161923; --ink-soft:#4E5566; --ink-faint:#6C7383;
+    --line:#E3E6EC; --line-strong:#D2D6DF;
+    --accent:#4A56C4; --accent-ink:#3A44A0; --accent-soft:#ECEDFA;
+    --ok:#1E8A4B; --ok-soft:#E3F3E9;
+    --warn:#B06A05; --warn-soft:#FAEEDA;
+    --crit:#C23B3B; --crit-soft:#FBE6E6;
+    --shadow-sm:0 1px 2px rgba(18,22,38,.06);
+    --shadow:0 1px 3px rgba(18,22,38,.05), 0 10px 28px -14px rgba(18,22,38,.16);
+    --radius:14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#0D1015; --surface:#161A22; --surface-2:#1B2029; --surface-3:#222834;
+      --ink:#E7EAF0; --ink-soft:#AEB5C4; --ink-faint:#8891A3;
+      --line:#262C39; --line-strong:#333B4A;
+      --accent:#8A92F0; --accent-ink:#AAB0F6; --accent-soft:#23273D;
+      --ok:#41B26B; --ok-soft:#15271D;
+      --warn:#D3993B; --warn-soft:#2C2413;
+      --crit:#E06A6A; --crit-soft:#2D1A1A;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+      --shadow:0 1px 3px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.6);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#0D1015; --surface:#161A22; --surface-2:#1B2029; --surface-3:#222834;
+    --ink:#E7EAF0; --ink-soft:#AEB5C4; --ink-faint:#8891A3;
+    --line:#262C39; --line-strong:#333B4A;
+    --accent:#8A92F0; --accent-ink:#AAB0F6; --accent-soft:#23273D;
+    --ok:#41B26B; --ok-soft:#15271D;
+    --warn:#D3993B; --warn-soft:#2C2413;
+    --crit:#E06A6A; --crit-soft:#2D1A1A;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+    --shadow:0 1px 3px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+
+  * , *::before, *::after { box-sizing:border-box; }
+  html { direction:rtl; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Readex Pro','Segoe UI',Tahoma,sans-serif;
+    font-weight:400; line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3 { margin:0; font-weight:600; line-height:1.3; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ============ Shell ============ */
+  .app { max-width:1240px; margin-inline:auto; padding:clamp(1rem,3vw,2rem); }
+
+  .topbar { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+  .topbar .title { display:flex; align-items:center; gap:.7rem; }
+  .topbar .logo {
+    width:40px; height:40px; border-radius:11px; flex:none;
+    background:var(--accent); color:#fff; display:grid; place-items:center; font-size:1.2rem;
+  }
+  .topbar h1 { font-size:1.15rem; }
+  .topbar .sub { font-size:.8rem; color:var(--ink-faint); }
+  .topbar .actions { margin-inline-start:auto; display:flex; gap:.5rem; flex-wrap:wrap; }
+
+  .btn {
+    font-family:inherit; font-size:.87rem; font-weight:500;
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.55rem .9rem; border-radius:9px; cursor:pointer;
+    border:1px solid var(--line-strong); background:var(--surface); color:var(--ink);
+    transition:background .12s, border-color .12s;
+  }
+  .btn:hover { border-color:var(--accent); }
+  .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn-primary:hover { filter:brightness(1.05); }
+  .btn-icon { padding:.5rem; }
+  .btn-sm { font-size:.8rem; padding:.35rem .6rem; }
+
+  /* ============ KPI cards ============ */
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1rem; }
+  @media (max-width:900px){ .kpis{ grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .kpis{ grid-template-columns:1fr;} }
+  .kpi {
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:1.1rem 1.2rem; box-shadow:var(--shadow-sm);
+  }
+  .kpi .label { font-size:.8rem; color:var(--ink-faint); display:flex; align-items:center; gap:.4rem; }
+  .kpi .value { font-size:1.7rem; font-weight:600; margin-top:.3rem; }
+  .kpi .value small { font-size:.9rem; font-weight:400; color:var(--ink-faint); }
+  .kpi .delta { font-size:.78rem; margin-top:.15rem; }
+  .kpi.alert { border-color:var(--crit); background:var(--crit-soft); }
+  .kpi.alert .value { color:var(--crit); }
+  .up { color:var(--ok); } .down { color:var(--crit); }
+
+  /* ============ Panels ============ */
+  .row2 { display:grid; grid-template-columns:1.5fr 1fr; gap:1rem; margin-bottom:1rem; }
+  @media (max-width:900px){ .row2{ grid-template-columns:1fr;} }
+  .panel {
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow-sm); overflow:hidden;
+  }
+  .panel-head {
+    padding:.9rem 1.2rem; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+  }
+  .panel-head h2 { font-size:.98rem; }
+  .panel-head .tools { margin-inline-start:auto; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+  .panel-body { padding:1.1rem 1.2rem; }
+
+  input, select {
+    font-family:inherit; font-size:.87rem; color:var(--ink);
+    background:var(--surface-2); border:1px solid var(--line-strong);
+    border-radius:8px; padding:.5rem .7rem;
+  }
+  input:focus, select:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .search { min-width:180px; }
+
+  /* ============ Bar chart (SVG) ============ */
+  .chart svg { width:100%; height:auto; display:block; }
+  .chart .bar { fill:var(--accent-soft); transition:fill .12s; }
+  .chart .bar.today { fill:var(--accent); }
+  .chart text { fill:var(--ink-faint); font-size:11px; font-family:inherit; }
+  .chart .grid { stroke:var(--line); stroke-width:1; }
+  .chart .val { fill:var(--ink-soft); font-weight:500; }
+
+  /* ============ Category bars ============ */
+  .catbar { display:grid; gap:.7rem; }
+  .catbar .row { display:grid; grid-template-columns:5.5rem 1fr auto; gap:.6rem; align-items:center; font-size:.83rem; }
+  .catbar .track { height:9px; background:var(--surface-3); border-radius:99px; overflow:hidden; }
+  .catbar .fill { height:100%; background:var(--accent); border-radius:99px; }
+  .catbar .n { color:var(--ink-faint); }
+
+  /* ============ Table ============ */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:.86rem; }
+  th, td { padding:.7rem .9rem; text-align:right; white-space:nowrap; }
+  thead th {
+    color:var(--ink-faint); font-weight:500; font-size:.8rem;
+    border-bottom:1px solid var(--line); cursor:pointer; user-select:none;
+  }
+  thead th:hover { color:var(--ink); }
+  thead th .arrow { color:var(--accent); font-size:.7rem; }
+  tbody tr { border-bottom:1px solid var(--line); }
+  tbody tr:hover { background:var(--surface-2); }
+  tbody tr.low { background:var(--warn-soft); }
+  tbody tr.out { background:var(--crit-soft); }
+  td .name { font-weight:500; }
+  .pill {
+    display:inline-block; font-size:.74rem; font-weight:500;
+    padding:.15rem .55rem; border-radius:99px;
+  }
+  .pill.ok { background:var(--ok-soft); color:var(--ok); }
+  .pill.low { background:var(--warn-soft); color:var(--warn); }
+  .pill.out { background:var(--crit-soft); color:var(--crit); }
+  .rowbtns { display:flex; gap:.3rem; }
+  .empty { text-align:center; color:var(--ink-faint); padding:2rem; font-size:.9rem; }
+
+  /* ============ Activity ============ */
+  .activity { display:grid; gap:.1rem; }
+  .activity .item {
+    display:flex; align-items:center; gap:.7rem; padding:.6rem 0;
+    border-bottom:1px solid var(--line); font-size:.84rem;
+  }
+  .activity .item:last-child { border-bottom:0; }
+  .activity .dot { width:8px; height:8px; border-radius:99px; background:var(--accent); flex:none; }
+  .activity .when { margin-inline-start:auto; color:var(--ink-faint); font-size:.78rem; }
+
+  /* ============ Dialog ============ */
+  dialog {
+    border:none; border-radius:16px; padding:0; width:min(460px,92vw);
+    background:var(--surface); color:var(--ink); box-shadow:var(--shadow);
+  }
+  dialog::backdrop { background:rgba(10,12,20,.5); backdrop-filter:blur(2px); }
+  .dlg-head { padding:1.1rem 1.3rem; border-bottom:1px solid var(--line); display:flex; align-items:center; }
+  .dlg-head h3 { font-size:1rem; }
+  .dlg-head .x { margin-inline-start:auto; background:none; border:none; color:var(--ink-faint); font-size:1.3rem; cursor:pointer; line-height:1; }
+  .dlg-body { padding:1.3rem; display:grid; gap:.9rem; }
+  .dlg-foot { padding:1rem 1.3rem; border-top:1px solid var(--line); display:flex; gap:.6rem; justify-content:flex-start; }
+  .fld { display:grid; gap:.3rem; }
+  .fld label { font-size:.8rem; color:var(--ink-soft); font-weight:500; }
+  .fld input, .fld select { width:100%; }
+  .fld .hint { font-size:.75rem; color:var(--ink-faint); }
+  .fld.bad input, .fld.bad select { border-color:var(--crit); }
+  .fld .err { font-size:.75rem; color:var(--crit); min-height:.9em; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+
+  .toast {
+    position:fixed; inset-block-end:1.2rem; inset-inline:0; margin-inline:auto;
+    width:max-content; max-width:90vw;
+    background:var(--ink); color:var(--bg); font-size:.85rem; font-weight:500;
+    padding:.7rem 1.1rem; border-radius:10px; box-shadow:var(--shadow);
+    opacity:0; transform:translateY(8px); transition:opacity .2s, transform .2s; pointer-events:none; z-index:50;
+  }
+  .toast.show { opacity:1; transform:none; }
+
+  .demo-tag {
+    position:fixed; inset-block-end:12px; inset-inline-start:12px; z-index:40;
+    background:var(--surface); border:1px solid var(--line); color:var(--ink-faint);
+    font-size:.72rem; padding:.3rem .6rem; border-radius:99px; box-shadow:var(--shadow-sm);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="title">
+      <div class="logo">▦</div>
+      <div>
+        <h1>لوحة المخزون والمبيعات</h1>
+        <div class="sub">متجر تموينات — نموذج معرض أعمال</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnReset" type="button">تصفير البيانات</button>
+      <button class="btn" id="btnTheme" type="button" aria-label="تبديل السمة">◐</button>
+      <button class="btn" id="btnSale" type="button">＋ بيع جديد</button>
+      <button class="btn btn-primary" id="btnAdd" type="button">＋ منتج جديد</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="row2">
+    <div class="panel chart">
+      <div class="panel-head"><h2>المبيعات — آخر ٧ أيام</h2><div class="tools"><span class="sub" id="weekTotal"></span></div></div>
+      <div class="panel-body" id="salesChart"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>المخزون حسب التصنيف</h2></div>
+      <div class="panel-body"><div class="catbar" id="catChart"></div></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:1rem">
+    <div class="panel-head">
+      <h2>المنتجات</h2>
+      <div class="tools">
+        <input class="search" id="search" type="search" placeholder="بحث بالاسم…" aria-label="بحث">
+        <select id="catFilter" aria-label="تصفية بالتصنيف"><option value="">كل التصنيفات</option></select>
+        <select id="statusFilter" aria-label="تصفية بالحالة">
+          <option value="">كل الحالات</option>
+          <option value="ok">متوفر</option>
+          <option value="low">منخفض</option>
+          <option value="out">نفد</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="name">المنتج</th>
+            <th data-sort="category">التصنيف</th>
+            <th data-sort="qty">الكمية</th>
+            <th data-sort="reorder">حد الأمان</th>
+            <th data-sort="cost">التكلفة</th>
+            <th data-sort="price">سعر البيع</th>
+            <th data-sort="margin">الربح</th>
+            <th data-sort="status">الحالة</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>آخر الحركات</h2></div>
+    <div class="panel-body"><div class="activity" id="activity"></div></div>
+  </div>
+
+</div>
+
+<!-- Product dialog -->
+<dialog id="dlgProduct">
+  <form method="dialog" id="formProduct">
+    <div class="dlg-head"><h3 id="dlgProductTitle">منتج جديد</h3><button type="button" class="x" data-close>×</button></div>
+    <div class="dlg-body">
+      <div class="fld">
+        <label for="pName">اسم المنتج</label>
+        <input id="pName" name="name" type="text" placeholder="مثال: أرز بسمتي ٥ كجم">
+        <div class="err" data-err="name"></div>
+      </div>
+      <div class="fld">
+        <label for="pCat">التصنيف</label>
+        <input id="pCat" name="category" list="catList" placeholder="مثال: أرز وحبوب">
+        <datalist id="catList"></datalist>
+        <div class="err" data-err="category"></div>
+      </div>
+      <div class="grid2">
+        <div class="fld">
+          <label for="pQty">الكمية الحالية</label>
+          <input id="pQty" name="qty" type="number" min="0" step="1" inputmode="numeric">
+          <div class="err" data-err="qty"></div>
+        </div>
+        <div class="fld">
+          <label for="pReorder">حد الأمان</label>
+          <input id="pReorder" name="reorder" type="number" min="0" step="1" inputmode="numeric">
+          <div class="hint">أقل كمية قبل التنبيه</div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld">
+          <label for="pCost">سعر التكلفة</label>
+          <input id="pCost" name="cost" type="number" min="0" step="0.01" inputmode="decimal">
+          <div class="err" data-err="cost"></div>
+        </div>
+        <div class="fld">
+          <label for="pPrice">سعر البيع</label>
+          <input id="pPrice" name="price" type="number" min="0" step="0.01" inputmode="decimal">
+          <div class="err" data-err="price"></div>
+        </div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn btn-primary" value="save" type="submit">حفظ</button>
+      <button class="btn" type="button" data-close>إلغاء</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Sale dialog -->
+<dialog id="dlgSale">
+  <form method="dialog" id="formSale">
+    <div class="dlg-head"><h3>تسجيل عملية بيع</h3><button type="button" class="x" data-close>×</button></div>
+    <div class="dlg-body">
+      <div class="fld">
+        <label for="sProduct">المنتج</label>
+        <select id="sProduct" name="productId"></select>
+        <div class="hint" id="sAvail"></div>
+      </div>
+      <div class="fld">
+        <label for="sQty">الكمية المباعة</label>
+        <input id="sQty" name="qty" type="number" min="1" step="1" value="1" inputmode="numeric">
+        <div class="err" data-err="qty"></div>
+      </div>
+      <div class="fld">
+        <label>الإجمالي</label>
+        <div class="num" id="sTotal" style="font-size:1.2rem;font-weight:600">0.00 ر.س</div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn btn-primary" value="save" type="submit">تسجيل البيع</button>
+      <button class="btn" type="button" data-close>إلغاء</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+<div class="demo-tag">نموذج تجريبي · بيانات محلية</div>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  root.lang = 'ar'; root.dir = 'rtl';
+
+  /* ============================================================
+     1. البيانات — تُحفظ في localStorage، وتُبذَر أول مرة
+     ============================================================ */
+  var KEY = 'inv-demo-v1';
+  var CATS = ['أرز وحبوب', 'زيوت وسمن', 'معلبات', 'ألبان', 'مشروبات', 'منظفات'];
+
+  var SEED_PRODUCTS = [
+    { name:'أرز بسمتي ٥ كجم',      category:'أرز وحبوب', qty:48,  reorder:15, cost:32,  price:41 },
+    { name:'أرز مزة ١٠ كجم',       category:'أرز وحبوب', qty:9,   reorder:12, cost:58,  price:72 },
+    { name:'زيت دوار الشمس ١.٨ ل',  category:'زيوت وسمن', qty:0,   reorder:10, cost:14.5,price:19 },
+    { name:'سمن نباتي ٢ كجم',       category:'زيوت وسمن', qty:22,  reorder:8,  cost:27,  price:34 },
+    { name:'تونة قطع ٤×١٧٠ج',       category:'معلبات',    qty:60,  reorder:20, cost:16,  price:22 },
+    { name:'فول مدمس ٤٠٠ج',         category:'معلبات',    qty:7,   reorder:24, cost:2.4, price:3.75 },
+    { name:'حليب طويل الأجل ١ ل',   category:'ألبان',     qty:130, reorder:40, cost:3.9, price:5.25 },
+    { name:'لبن زبادي ٦×١٧٠ج',      category:'ألبان',     qty:14,  reorder:18, cost:7.5, price:10 },
+    { name:'ماء ٤٠×٣٣٠ مل',        category:'مشروبات',   qty:35,  reorder:15, cost:9,   price:13 },
+    { name:'عصير برتقال ١.٥ ل',     category:'مشروبات',   qty:26,  reorder:12, cost:6.2, price:9 },
+    { name:'مسحوق غسيل ٣ كجم',      category:'منظفات',    qty:5,   reorder:10, cost:21,  price:28 },
+    { name:'سائل جلي ٧٥٠ مل',       category:'منظفات',    qty:40,  reorder:15, cost:5.5, price:8.5 }
+  ];
+
+  var state = { products: [], sales: [] };
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function seed() {
+    state.products = SEED_PRODUCTS.map(function (p) { return Object.assign({ id: uid() }, p); });
+    state.sales = [];
+    var now = Date.now(), DAY = 86400000;
+    for (var d = 6; d >= 0; d--) {
+      var count = 2 + Math.floor(Math.random() * 5);
+      for (var i = 0; i < count; i++) {
+        var p = state.products[Math.floor(Math.random() * state.products.length)];
+        var q = 1 + Math.floor(Math.random() * 4);
+        state.sales.push({
+          id: uid(), productId: p.id, name: p.name, qty: q,
+          total: +(q * p.price).toFixed(2),
+          at: new Date(now - d * DAY - Math.random() * DAY).toISOString()
+        });
+      }
+    }
+    save();
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { state = JSON.parse(raw); return; }
+    } catch (e) {}
+    seed();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  /* ============================================================
+     2. حسابات مشتقة
+     ============================================================ */
+  function statusOf(p) { return p.qty === 0 ? 'out' : (p.qty <= p.reorder ? 'low' : 'ok'); }
+  function stockValue() { return state.products.reduce(function (s, p) { return s + p.qty * p.cost; }, 0); }
+  function lowCount() { return state.products.filter(function (p) { return statusOf(p) !== 'ok'; }).length; }
+
+  function daysBack(n) {
+    var out = [], today = new Date(); today.setHours(0, 0, 0, 0);
+    for (var i = n - 1; i >= 0; i--) {
+      var dt = new Date(today.getTime() - i * 86400000);
+      out.push({ date: dt, total: 0 });
+    }
+    state.sales.forEach(function (s) {
+      var t = new Date(s.at); t.setHours(0, 0, 0, 0);
+      var bucket = out.find(function (b) { return b.date.getTime() === t.getTime(); });
+      if (bucket) bucket.total += s.total;
+    });
+    return out;
+  }
+
+  function stockByCategory() {
+    var map = {};
+    state.products.forEach(function (p) { map[p.category] = (map[p.category] || 0) + p.qty; });
+    return Object.keys(map).map(function (k) { return { cat: k, qty: map[k] }; })
+      .sort(function (a, b) { return b.qty - a.qty; });
+  }
+
+  /* ============================================================
+     3. أدوات مساعدة
+     ============================================================ */
+  var fmt = new Intl.NumberFormat('en-US');
+  function money(n) { return (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س'; }
+  var DAYNAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  function relTime(iso) {
+    var diff = Date.now() - new Date(iso).getTime();
+    var m = Math.floor(diff / 60000);
+    if (m < 1) return 'الآن';
+    if (m < 60) return 'قبل ' + m + ' د';
+    var h = Math.floor(m / 60);
+    if (h < 24) return 'قبل ' + h + ' س';
+    return 'قبل ' + Math.floor(h / 24) + ' يوم';
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+
+  var toastTimer;
+  function toast(msg) {
+    var el = $('#toast'); el.textContent = msg; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2400);
+  }
+
+  /* ============================================================
+     4. الرسم (render)
+     ============================================================ */
+  function renderKpis() {
+    var week = daysBack(7).reduce(function (s, d) { return s + d.total; }, 0);
+    var today = daysBack(1)[0].total;
+    var low = lowCount();
+    var items = [
+      { label: 'عدد المنتجات', value: fmt.format(state.products.length) },
+      { label: 'قيمة المخزون', value: money(stockValue()) },
+      { label: 'مبيعات اليوم', value: money(today), delta: 'الأسبوع: ' + money(week) },
+      { label: 'أصناف تحتاج تزويد', value: fmt.format(low), alert: low > 0 }
+    ];
+    $('#kpis').innerHTML = items.map(function (k) {
+      return '<div class="kpi' + (k.alert ? ' alert' : '') + '">' +
+        '<div class="label">' + k.label + '</div>' +
+        '<div class="value num">' + k.value + '</div>' +
+        (k.delta ? '<div class="delta">' + k.delta + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function renderSalesChart() {
+    var data = daysBack(7);
+    var max = Math.max(1, Math.max.apply(null, data.map(function (d) { return d.total; })));
+    var W = 520, H = 200, pad = 28, bw = (W - pad * 2) / data.length * 0.6, gap = (W - pad * 2) / data.length;
+    var todayKey = new Date(); todayKey.setHours(0, 0, 0, 0);
+    var bars = data.map(function (d, i) {
+      var h = (d.total / max) * (H - pad * 2);
+      var x = pad + i * gap + (gap - bw) / 2;
+      var y = H - pad - h;
+      var isToday = d.date.getTime() === todayKey.getTime();
+      return '<rect class="bar' + (isToday ? ' today' : '') + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) +
+        '" width="' + bw.toFixed(1) + '" height="' + Math.max(h, 1).toFixed(1) + '" rx="4"></rect>' +
+        '<text class="val" x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" text-anchor="middle">' +
+        (d.total ? Math.round(d.total) : '') + '</text>' +
+        '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + DAYNAMES[d.date.getDay()] + '</text>';
+    }).join('');
+    var grid = [0, .5, 1].map(function (f) {
+      var y = H - pad - f * (H - pad * 2);
+      return '<line class="grid" x1="' + pad + '" y1="' + y + '" x2="' + (W - pad) + '" y2="' + y + '"></line>';
+    }).join('');
+    $('#salesChart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="مخطط المبيعات">' + grid + bars + '</svg>';
+    $('#weekTotal').textContent = 'إجمالي الأسبوع: ' + money(data.reduce(function (s, d) { return s + d.total; }, 0));
+  }
+
+  function renderCatChart() {
+    var data = stockByCategory();
+    var max = Math.max(1, Math.max.apply(null, data.map(function (d) { return d.qty; })));
+    $('#catChart').innerHTML = data.map(function (d) {
+      return '<div class="row"><span>' + esc(d.cat) + '</span>' +
+        '<span class="track"><span class="fill" style="width:' + (d.qty / max * 100).toFixed(1) + '%"></span></span>' +
+        '<span class="n num">' + fmt.format(d.qty) + '</span></div>';
+    }).join('');
+  }
+
+  var view = { q: '', cat: '', status: '', sort: 'name', dir: 1 };
+
+  function visibleProducts() {
+    var list = state.products.filter(function (p) {
+      if (view.q && p.name.toLowerCase().indexOf(view.q.toLowerCase()) < 0) return false;
+      if (view.cat && p.category !== view.cat) return false;
+      if (view.status && statusOf(p) !== view.status) return false;
+      return true;
+    });
+    var key = view.sort;
+    list.sort(function (a, b) {
+      var va, vb;
+      if (key === 'margin') { va = a.price - a.cost; vb = b.price - b.cost; }
+      else if (key === 'status') { va = a.qty - a.reorder; vb = b.qty - b.reorder; }
+      else { va = a[key]; vb = b[key]; }
+      if (typeof va === 'string') return va.localeCompare(vb, 'ar') * view.dir;
+      return (va - vb) * view.dir;
+    });
+    return list;
+  }
+
+  function renderTable() {
+    var list = visibleProducts();
+    var tb = $('#tbody');
+    if (!list.length) { tb.innerHTML = '<tr><td colspan="9" class="empty">لا توجد منتجات مطابقة</td></tr>'; }
+    else {
+      tb.innerHTML = list.map(function (p) {
+        var st = statusOf(p);
+        var label = st === 'out' ? 'نفد' : st === 'low' ? 'منخفض' : 'متوفر';
+        var margin = p.price - p.cost;
+        return '<tr class="' + (st === 'ok' ? '' : st) + '">' +
+          '<td><span class="name">' + esc(p.name) + '</span></td>' +
+          '<td>' + esc(p.category) + '</td>' +
+          '<td class="num">' + fmt.format(p.qty) + '</td>' +
+          '<td class="num">' + fmt.format(p.reorder) + '</td>' +
+          '<td class="num">' + money(p.cost) + '</td>' +
+          '<td class="num">' + money(p.price) + '</td>' +
+          '<td class="num">' + money(margin) + '</td>' +
+          '<td><span class="pill ' + st + '">' + label + '</span></td>' +
+          '<td><div class="rowbtns">' +
+          '<button class="btn btn-sm" data-edit="' + p.id + '">تعديل</button>' +
+          '<button class="btn btn-sm" data-del="' + p.id + '">حذف</button>' +
+          '</div></td></tr>';
+      }).join('');
+    }
+    // sort indicators
+    document.querySelectorAll('thead th[data-sort]').forEach(function (th) {
+      var a = th.querySelector('.arrow'); if (a) a.remove();
+      if (th.dataset.sort === view.sort) {
+        var s = document.createElement('span'); s.className = 'arrow';
+        s.textContent = view.dir === 1 ? ' ▲' : ' ▼'; th.appendChild(s);
+      }
+    });
+  }
+
+  function renderActivity() {
+    var list = state.sales.slice().sort(function (a, b) { return new Date(b.at) - new Date(a.at); }).slice(0, 8);
+    $('#activity').innerHTML = list.length ? list.map(function (s) {
+      return '<div class="item"><span class="dot"></span>' +
+        '<span>بيع <strong>' + fmt.format(s.qty) + '×</strong> ' + esc(s.name) + '</span>' +
+        '<span class="num" style="color:var(--ink-soft)">' + money(s.total) + '</span>' +
+        '<span class="when">' + relTime(s.at) + '</span></div>';
+    }).join('') : '<div class="empty">لا توجد حركات بعد</div>';
+  }
+
+  function fillCategoryControls() {
+    var cats = Array.from(new Set(state.products.map(function (p) { return p.category; }))).sort();
+    $('#catFilter').innerHTML = '<option value="">كل التصنيفات</option>' +
+      cats.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+    $('#catFilter').value = view.cat;
+    $('#catList').innerHTML = CATS.concat(cats).filter(function (v, i, a) { return a.indexOf(v) === i; })
+      .map(function (c) { return '<option value="' + esc(c) + '">'; }).join('');
+  }
+
+  function renderAll() {
+    renderKpis(); renderSalesChart(); renderCatChart(); fillCategoryControls(); renderTable(); renderActivity();
+  }
+
+  /* ============================================================
+     5. التفاعل
+     ============================================================ */
+  // بحث + تصفية
+  $('#search').addEventListener('input', function (e) { view.q = e.target.value; renderTable(); });
+  $('#catFilter').addEventListener('change', function (e) { view.cat = e.target.value; renderTable(); });
+  $('#statusFilter').addEventListener('change', function (e) { view.status = e.target.value; renderTable(); });
+
+  // ترتيب
+  document.querySelectorAll('thead th[data-sort]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var k = th.dataset.sort;
+      if (view.sort === k) view.dir *= -1; else { view.sort = k; view.dir = 1; }
+      renderTable();
+    });
+  });
+
+  // جدول: تعديل / حذف
+  $('#tbody').addEventListener('click', function (e) {
+    var ed = e.target.closest('[data-edit]'), dl = e.target.closest('[data-del]');
+    if (ed) openProduct(ed.dataset.edit);
+    if (dl) {
+      var p = state.products.find(function (x) { return x.id === dl.dataset.del; });
+      if (p && confirm('حذف «' + p.name + '»؟')) {
+        state.products = state.products.filter(function (x) { return x.id !== p.id; });
+        save(); renderAll(); toast('تم حذف المنتج');
+      }
+    }
+  });
+
+  // نافذة المنتج
+  var dlgP = $('#dlgProduct'), formP = $('#formProduct'), editingId = null;
+  function openProduct(id) {
+    editingId = id || null;
+    var p = id ? state.products.find(function (x) { return x.id === id; }) : null;
+    $('#dlgProductTitle').textContent = p ? 'تعديل منتج' : 'منتج جديد';
+    formP.reset();
+    formP.querySelectorAll('.err').forEach(function (x) { x.textContent = ''; });
+    formP.querySelectorAll('.fld').forEach(function (x) { x.classList.remove('bad'); });
+    if (p) { formP.name.value = p.name; formP.category.value = p.category; formP.qty.value = p.qty; formP.reorder.value = p.reorder; formP.cost.value = p.cost; formP.price.value = p.price; }
+    else { formP.reorder.value = 10; }
+    fillCategoryControls();
+    dlgP.showModal();
+    formP.name.focus();
+  }
+  formP.addEventListener('submit', function (e) {
+    var d = Object.fromEntries(new FormData(formP).entries());
+    var bad = false;
+    function err(name, msg) {
+      var f = formP.querySelector('[name="' + name + '"]').closest('.fld');
+      f.classList.toggle('bad', !!msg);
+      var box = f.querySelector('.err'); if (box) box.textContent = msg || '';
+      if (msg) bad = true;
+    }
+    err('name', d.name && d.name.trim().length >= 2 ? '' : 'أدخل اسمًا صحيحًا');
+    err('category', d.category && d.category.trim() ? '' : 'أدخل التصنيف');
+    err('qty', d.qty !== '' && +d.qty >= 0 ? '' : 'كمية غير صحيحة');
+    err('cost', d.cost !== '' && +d.cost >= 0 ? '' : 'قيمة غير صحيحة');
+    err('price', d.price !== '' && +d.price >= 0 ? '' : 'قيمة غير صحيحة');
+    if (+d.price < +d.cost) err('price', 'سعر البيع أقل من التكلفة');
+    if (bad) { e.preventDefault(); return; }
+
+    var rec = {
+      name: d.name.trim(), category: d.category.trim(),
+      qty: Math.round(+d.qty), reorder: Math.round(+d.reorder || 0),
+      cost: +(+d.cost).toFixed(2), price: +(+d.price).toFixed(2)
+    };
+    if (editingId) {
+      Object.assign(state.products.find(function (x) { return x.id === editingId; }), rec);
+      toast('تم تحديث المنتج');
+    } else {
+      state.products.push(Object.assign({ id: uid() }, rec));
+      toast('تمت إضافة المنتج');
+    }
+    save(); renderAll();
+    // نترك النموذج يُغلق تلقائيًا (method="dialog")
+  });
+
+  // نافذة البيع
+  var dlgS = $('#dlgSale'), formS = $('#formSale');
+  function refreshSaleDialog() {
+    var avail = state.products.filter(function (p) { return p.qty > 0; });
+    $('#sProduct').innerHTML = avail.map(function (p) {
+      return '<option value="' + p.id + '">' + esc(p.name) + ' — متوفر ' + p.qty + '</option>';
+    }).join('') || '<option value="">لا يوجد مخزون</option>';
+    updateSaleTotal();
+  }
+  function currentSaleProduct() { return state.products.find(function (p) { return p.id === $('#sProduct').value; }); }
+  function updateSaleTotal() {
+    var p = currentSaleProduct(), q = Math.max(1, Math.round(+formS.qty.value || 1));
+    $('#sTotal').textContent = money(p ? p.price * q : 0);
+    $('#sAvail').textContent = p ? ('السعر: ' + money(p.price) + ' — المتوفر: ' + p.qty) : '';
+  }
+  $('#sProduct').addEventListener('change', updateSaleTotal);
+  formS.qty.addEventListener('input', updateSaleTotal);
+  formS.addEventListener('submit', function (e) {
+    var p = currentSaleProduct(), q = Math.round(+formS.qty.value || 0);
+    var box = formS.querySelector('[data-err="qty"]'); box.textContent = '';
+    if (!p) { e.preventDefault(); return; }
+    if (q < 1) { e.preventDefault(); box.textContent = 'الكمية ١ على الأقل'; return; }
+    if (q > p.qty) { e.preventDefault(); box.textContent = 'الكمية أكبر من المتوفر (' + p.qty + ')'; return; }
+    p.qty -= q;
+    state.sales.push({ id: uid(), productId: p.id, name: p.name, qty: q, total: +(q * p.price).toFixed(2), at: new Date().toISOString() });
+    save(); renderAll(); toast('تم تسجيل البيع');
+  });
+
+  // أزرار عامة
+  $('#btnAdd').addEventListener('click', function () { openProduct(null); });
+  $('#btnSale').addEventListener('click', function () { formS.reset(); formS.qty.value = 1; refreshSaleDialog(); dlgS.showModal(); });
+  $('#btnReset').addEventListener('click', function () {
+    if (confirm('استعادة البيانات التجريبية؟ سيُحذف كل تغيير أجريته.')) { seed(); view.q = ''; $('#search').value = ''; renderAll(); toast('تمت استعادة البيانات'); }
+  });
+  document.querySelectorAll('[data-close]').forEach(function (b) {
+    b.addEventListener('click', function () { b.closest('dialog').close(); });
+  });
+
+  // السمة
+  try { var t = localStorage.getItem('inv-theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+  $('#btnTheme').addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('inv-theme', next); } catch (e) {}
+    renderSalesChart();
+  });
+
+  /* ============================================================
+     6. تشغيل
+     ============================================================ */
+  load();
+  renderAll();
+})();
+</script>
+</body>
+</html>
